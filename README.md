@@ -1,2 +1,2 @@
 # ASMPlus
-Usefull tools and utils for modifying java bytecode
+Docs and guide found under: https://exeos.gitbook.io/asmplus/ 
