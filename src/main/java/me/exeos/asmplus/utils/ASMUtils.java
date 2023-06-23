@@ -10,6 +10,15 @@ public class ASMUtils implements Opcodes {
 
     /* ___ START: get x by / based on y ___ */
 
+    public static MethodNode getMethod(ClassNode owner, String name, String desc) {
+        for (MethodNode methodNode : owner.methods) {
+            if (methodNode.name.equals(name) && methodNode.desc.equals(desc))
+                return methodNode;
+        }
+
+        return null;
+    }
+
     /**
      * Get x next insn after @current insn
      *

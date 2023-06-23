@@ -9,18 +9,18 @@ import org.objectweb.asm.tree.LookupSwitchInsnNode;
 import java.util.Comparator;
 import java.util.List;
 
-public class LookUpSwitchGenerator implements Opcodes {
+public class LookupSwitchGenerator implements Opcodes {
 
     private final List<SwitchCase> cases;
 
     private final SwitchCase dfltCase;
     private final LabelNode switchEnd;
 
-    public LookUpSwitchGenerator(List<SwitchCase> cases) {
+    public LookupSwitchGenerator(List<SwitchCase> cases) {
         this(cases, null);
     }
 
-    private LookUpSwitchGenerator(List<SwitchCase> cases, SwitchCase dfltCase) {
+    private LookupSwitchGenerator(List<SwitchCase> cases, SwitchCase dfltCase) {
         this.cases = cases;
         this.dfltCase = dfltCase;
         switchEnd = new LabelNode();
