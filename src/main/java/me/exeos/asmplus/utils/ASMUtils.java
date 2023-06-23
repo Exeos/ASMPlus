@@ -1,11 +1,14 @@
-package me.exeos.asmplus.util;
+package me.exeos.asmplus.utils;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
-public class ASMUtil implements Opcodes {
+import java.util.ArrayList;
+import java.util.List;
 
-    /* ___START: get x by / based on y___ */
+public class ASMUtils implements Opcodes {
+
+    /* ___ START: get x by / based on y ___ */
 
     /**
      * Get x next insn after @current insn
@@ -41,11 +44,33 @@ public class ASMUtil implements Opcodes {
         return current;
     }
 
-    public static AbstractInsnNode getMethodEnd(MethodNode methodNode) {
-        if (methodNode.instructions.size() == 0)
+    /**
+     * @return Random label from method
+     */
+    public static LabelNode getRandomLabel(MethodNode from) {
+        List<LabelNode> labels = getMethodLabels(from);
+
+        if (labels.isEmpty())
+            return null;
+        else
+            return labels.get(RandomUtil.getInt(0, labels.size() - 1));
+    }
+
+    public static List<LabelNode> getMethodLabels(MethodNode from) {
+        List<LabelNode> labels = new ArrayList<>();
+        for (AbstractInsnNode insnNode : from.instructions) {
+            if (insnNode instanceof LabelNode labelNode)
+                labels.add(labelNode);
+        }
+
+        return labels;
+    }
+
+    public static AbstractInsnNode getMethodEnd(MethodNode from) {
+        if (from.instructions.size() == 0)
             throw new IllegalStateException("Method has no instructions!");
         
-        AbstractInsnNode end = methodNode.instructions.get(methodNode.instructions.size() - 1);
+        AbstractInsnNode end = from.instructions.get(from.instructions.size() - 1);
         while (end != null && end.getOpcode() < IRETURN || end.getOpcode() > RETURN) {
             end = end.getPrevious();
         }
@@ -56,7 +81,7 @@ public class ASMUtil implements Opcodes {
         return end;
     }
 
-    /* ___START: value pushes___ */
+    /* ___ START: value pushes___ */
     public static AbstractInsnNode getValuePush(Object value) {
         return switch (value.getClass().getSimpleName()) {
             case "Byte" -> getBytePush((byte) value);
@@ -102,7 +127,6 @@ public class ASMUtil implements Opcodes {
 
         return new InsnNode(FCONST_0 + (int) value);
     }
-
     /**
      * @param value Int to be pushed. MUST BE EITHER 0 or 1!
      * @return Insn pushing the int
@@ -159,11 +183,128 @@ public class ASMUtil implements Opcodes {
 
         return new LdcInsnNode(value);
     }
-    /* ___END: value pushes___ */
+    /* ___ END: value pushes ___ */
 
-    /* __END: get x by / based on y___ */
 
-    /* ___START: checks & conditions___ */
+    /* ___ START: jumps ___ */
+
+    /**
+     * @param to Label to jump to
+     * @return InsnList for a random jump
+     */
+    public InsnList getJump(LabelNode to) {
+        return getJump(RandomUtil.getInt(IFEQ, GOTO), to);
+    }
+
+    /**
+     * @param jumpOpcode Jump insn to use
+     * @param to Label to jump to
+     * @return InsnList for jump
+     */
+    public InsnList getJump(int jumpOpcode, LabelNode to) {
+        InsnList jump = new InsnList();
+        switch (jumpOpcode) {
+            /* val == 0 */
+            case IFEQ -> {
+                jump.add(new InsnNode(ICONST_0));
+                jump.add(new JumpInsnNode(IFEQ, to));
+            }
+            /* val != 0 */
+            case IFNE -> {
+                jump.add(new InsnNode(ICONST_1));
+                jump.add(new JumpInsnNode(IFNE, to));
+            }
+            /* val < 0 */
+            case IFLT -> {
+                jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, -1)));
+                jump.add(new JumpInsnNode(IFLT, to));
+            }
+            /* val >= 0 */
+            case IFGE -> {
+                jump.add(getIntPush(RandomUtil.getInt(0, Integer.MAX_VALUE)));
+                jump.add(new JumpInsnNode(IFGE, to));
+            }
+            /* val > 0 */
+            case IFGT -> {
+                jump.add(getIntPush(RandomUtil.getInt(1, Integer.MAX_VALUE)));
+                jump.add(new JumpInsnNode(IFGT, to));
+            }
+            /* val <= 0 */
+            case IFLE -> {
+                jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, 0)));
+                jump.add(new JumpInsnNode(IFLE, to));
+            }
+            /* int0 == int1 */
+            case IF_ICMPEQ -> {
+                jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, Integer.MAX_VALUE)));
+                jump.add(new InsnNode(DUP));
+                jump.add(new JumpInsnNode(IF_ICMPEQ, to));
+            }
+            /* int0 != int1 */
+            case IF_ICMPNE -> {
+                jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, 0)));
+                jump.add(getIntPush(RandomUtil.getInt(1, Integer.MAX_VALUE)));
+
+                jump.add(new JumpInsnNode(IF_ICMPNE, to));
+            }
+            /* int0 < int 1*/
+            case IF_ICMPLT -> {
+                int less = RandomUtil.getInt(Integer.MIN_VALUE, Integer.MAX_VALUE - 1);
+
+                jump.add(getIntPush(less));
+                jump.add(getIntPush(RandomUtil.getInt(less + 1, Integer.MAX_VALUE)));
+
+                jump.add(new JumpInsnNode(IF_ICMPLT, to));
+            }
+            /* int0 >= int1 */
+            case IF_ICMPGE -> {
+                int more = RandomUtil.getInt(Integer.MIN_VALUE + 1, Integer.MAX_VALUE);
+
+                jump.add(getIntPush(more));
+                jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, more)));
+                jump.add(new JumpInsnNode(IF_ICMPGE, to));
+            }
+            /* int0 > int1 */
+            case IF_ICMPGT -> {
+                int more = RandomUtil.getInt(Integer.MIN_VALUE + 1, Integer.MAX_VALUE);
+
+                jump.add(getIntPush(more));
+                jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, more - 1)));
+                jump.add(new JumpInsnNode(IF_ICMPGT, to));
+            }
+            /* int0 <= int1 */
+            case IF_ICMPLE -> {
+                int less = RandomUtil.getInt(Integer.MIN_VALUE, Integer.MAX_VALUE - 1);
+
+                jump.add(getIntPush(less));
+                jump.add(getIntPush(RandomUtil.getInt(less, Integer.MAX_VALUE)));
+
+                jump.add(new JumpInsnNode(IF_ICMPLE, to));
+            }
+            /* object0 == object1 */
+            case IF_ACMPEQ -> {
+                jump.add(new TypeInsnNode(NEW, "java/lang/String"));
+                jump.add(new InsnNode(DUP));
+
+                jump.add(new JumpInsnNode(IF_ACMPEQ, to));
+            }
+            /* object0 != object1 */
+            case IF_ACMPNE -> {
+                jump.add(new TypeInsnNode(NEW, "java/lang/String"));
+                jump.add(new TypeInsnNode(NEW, "java/lang/Integer"));
+
+                jump.add(new JumpInsnNode(IF_ACMPNE, to));
+            }
+            /* direct jump to label */
+            case GOTO -> jump.add(new JumpInsnNode(GOTO, to));
+        }
+        return jump;
+    }
+    /* ___ END: jumps ___ */
+
+    /* ___ END: get x by / based on y ___ */
+
+    /* ___ START: checks & conditions ___ */
 
     public static boolean isValuePush(AbstractInsnNode insnNode) {
         return insnNode instanceof LdcInsnNode || insnNode instanceof TypeInsnNode || isNumberPush(insnNode);
@@ -235,11 +376,11 @@ public class ASMUtil implements Opcodes {
         return isIConstPush(insnNode.getOpcode()) ||
                 (insnNode instanceof IntInsnNode intInsnNode && intInsnNode.operand >= Short.MIN_VALUE && intInsnNode.operand <= Short.MAX_VALUE);
     }
-    /* ___END: num check___*/
+    /* ___ END: num check ___*/
 
     public static boolean isString(AbstractInsnNode insnNode) {
         return insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String;
     }
 
-    /* ___END: checks & conditions___ */
+    /* ___ END: checks & conditions ___ */
 }

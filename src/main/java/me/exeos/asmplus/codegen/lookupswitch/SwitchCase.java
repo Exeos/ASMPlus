@@ -1,4 +1,4 @@
-package me.exeos.asmplus.lookupswitch;
+package me.exeos.asmplus.codegen.lookupswitch;
 
 import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.LabelNode;
@@ -9,14 +9,9 @@ public class SwitchCase {
 
     public final LabelNode caseStart;
     public final InsnList instructions;
-    /**
-     * where to jump after done executing
-     */
-    public final LabelNode switchEnd;
 
-    public SwitchCase(Object key, InsnList instructions, LabelNode switchEnd) {
+    public SwitchCase(Object key, InsnList instructions) {
         this.instructions = instructions;
-        this.switchEnd = switchEnd;
         caseStart = new LabelNode();
 
         switch (key.getClass().getName()) {

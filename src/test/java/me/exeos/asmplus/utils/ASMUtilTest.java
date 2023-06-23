@@ -1,4 +1,4 @@
-package me.exeos.asmplus.util;
+package me.exeos.asmplus.utils;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -15,9 +15,9 @@ class ASMUtilTest implements Opcodes {
         IntInsnNode sIntPush = new IntInsnNode(SIPUSH, Short.MAX_VALUE);
         LdcInsnNode ldcIntPush = new LdcInsnNode(Short.MAX_VALUE + 50);
 
-        assertTrue(ASMUtil.isNumberPush(bIntPush));
-        assertTrue(ASMUtil.isNumberPush(sIntPush));
-        assertTrue(ASMUtil.isNumberPush(ldcIntPush));
+        assertTrue(ASMUtils.isNumberPush(bIntPush));
+        assertTrue(ASMUtils.isNumberPush(sIntPush));
+        assertTrue(ASMUtils.isNumberPush(ldcIntPush));
     }
 
     @Test

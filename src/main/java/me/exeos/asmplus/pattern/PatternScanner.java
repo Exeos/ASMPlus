@@ -3,7 +3,7 @@ package me.exeos.asmplus.pattern;
 import me.exeos.asmplus.pattern.result.ClassResult;
 import me.exeos.asmplus.pattern.result.InsnResult;
 import me.exeos.asmplus.pattern.result.MethodResult;
-import me.exeos.asmplus.util.ASMUtil;
+import me.exeos.asmplus.utils.ASMUtils;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.ClassNode;
@@ -77,7 +77,7 @@ public class PatternScanner implements PatternParts, Opcodes {
         List<InsnResult> foundPatterns = new ArrayList<>();
 
         for (AbstractInsnNode first : methodNode.instructions) {
-            AbstractInsnNode last = ASMUtil.getNext(first, pattern.length - 1);
+            AbstractInsnNode last = ASMUtils.getNext(first, pattern.length - 1);
 
             if (last == null)
                 break;
@@ -94,7 +94,7 @@ public class PatternScanner implements PatternParts, Opcodes {
             int currentInsn = 0;
             int currentPattern = 0;
             while (currentPattern <= pattern.length - 1) {
-                AbstractInsnNode next = ASMUtil.getNext(first, currentInsn);
+                AbstractInsnNode next = ASMUtils.getNext(first, currentInsn);
                 if (next == null) {
                     match = false;
                     break;
@@ -142,7 +142,7 @@ public class PatternScanner implements PatternParts, Opcodes {
     }
 
     private boolean match(AbstractInsnNode toCheck, int part) {
-        return part == P_ANY || (part == P_NUMBER && ASMUtil.isNumberPush(toCheck)) || (part == P_STRING && ASMUtil.isString(toCheck)) ||
-                (part == P_VALUE && ASMUtil.isValuePush(toCheck)) || toCheck.getOpcode() == part || toCheck.getType() == part - 300;
+        return part == P_ANY || (part == P_NUMBER && ASMUtils.isNumberPush(toCheck)) || (part == P_STRING && ASMUtils.isString(toCheck)) ||
+                (part == P_VALUE && ASMUtils.isValuePush(toCheck)) || toCheck.getOpcode() == part || toCheck.getType() == part - 300;
     }
 }

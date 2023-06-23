@@ -1,4 +1,4 @@
-package me.exeos.asmplus.lookupswitch;
+package me.exeos.asmplus.codegen.lookupswitch;
 
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.InsnList;
