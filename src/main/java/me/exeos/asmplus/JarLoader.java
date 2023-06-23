@@ -23,11 +23,11 @@ import java.util.jar.JarOutputStream;
 
 public class JarLoader {
 
-    public static final HashMap<String, ClassNode> CLASSES = new HashMap<>();
-    public static final HashMap<String, byte[]> FILES = new HashMap<>();
+    public final HashMap<String, ClassNode> classes = new HashMap<>();
+    public final HashMap<String, byte[]> resources = new HashMap<>();
 
-    private static FileTime creationTime;
-    private static FileTime lastModifiedTime;
+    private FileTime creationTime;
+    private FileTime lastModifiedTime;
 
     /**
      * Load all classes and files of jar to HashMaps in form of:
@@ -38,7 +38,7 @@ public class JarLoader {
      * @throws IOException
      */
 
-    public static void load(String inputPath) throws IOException {
+    public void load(String inputPath) throws IOException {
         JarFile jarIn = new JarFile(inputPath);
         Enumeration<? extends JarEntry> entries = jarIn.entries();
         JarEntry entry = entries.nextElement();
@@ -54,9 +54,9 @@ public class JarLoader {
                     ClassNode classNode = new ClassNode();
 
                     classReader.accept(classNode, ClassReader.SKIP_FRAMES + ClassReader.SKIP_DEBUG);
-                    CLASSES.put(classNode.name, classNode);
+                    classes.put(classNode.name, classNode);
                 }
-            } else FILES.put(entry.getRealName(), entryBytes);
+            } else resources.put(entry.getRealName(), entryBytes);
 
             entry = entries.nextElement();
         }
@@ -73,16 +73,16 @@ public class JarLoader {
      * @throws IOException
      */
 
-    public static void export(String inputPath) throws IOException {
+    public void export(String inputPath) throws IOException {
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(inputPath));
-        for (Map.Entry<String, ClassNode> entry : CLASSES.entrySet()) {
+        for (Map.Entry<String, ClassNode> entry : classes.entrySet()) {
             ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             entry.getValue().accept(classWriter);
 
             writeJarEntry(jarOut, entry.getKey() + ".class", classWriter.toByteArray());
         }
 
-        for (Map.Entry<String, byte[]> e : FILES.entrySet()) {
+        for (Map.Entry<String, byte[]> e : resources.entrySet()) {
             writeJarEntry(jarOut, e.getKey(), e.getValue());
         }
 
@@ -92,7 +92,7 @@ public class JarLoader {
         attributeView.setTimes(lastModifiedTime, null, creationTime);
     }
 
-    private static void writeJarEntry(JarOutputStream outputStream, String name, byte[] bytes) throws IOException {
+    private void writeJarEntry(JarOutputStream outputStream, String name, byte[] bytes) throws IOException {
         JarEntry entry = new JarEntry(new String(name.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8));
 
         if (creationTime != null)
@@ -107,7 +107,7 @@ public class JarLoader {
         outputStream.closeEntry();
     }
 
-    private static boolean isClass(byte[] file) {
+    private boolean isClass(byte[] file) {
         if (file.length < 4)
             return false;
         return new BigInteger(1, new byte[] { file[0], file[1], file[2], file[3] }).intValue() == -889275714;
