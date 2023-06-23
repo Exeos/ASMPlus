@@ -142,6 +142,7 @@ public class PatternScanner implements PatternParts, Opcodes {
     }
 
     private boolean match(AbstractInsnNode toCheck, int part) {
-        return part == P_ANY || (part == P_NUMBER && ASMUtil.isNumberPush(toCheck)) || toCheck.getOpcode() == part || toCheck.getType() == part - 300;
+        return part == P_ANY || (part == P_NUMBER && ASMUtil.isNumberPush(toCheck)) || (part == P_STRING && ASMUtil.isString(toCheck)) ||
+                (part == P_VALUE && ASMUtil.isValuePush(toCheck)) || toCheck.getOpcode() == part || toCheck.getType() == part - 300;
     }
 }

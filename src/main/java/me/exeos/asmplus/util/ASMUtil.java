@@ -1,10 +1,7 @@
 package me.exeos.asmplus.util;
 
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.AbstractInsnNode;
-import org.objectweb.asm.tree.InsnNode;
-import org.objectweb.asm.tree.IntInsnNode;
-import org.objectweb.asm.tree.LdcInsnNode;
+import org.objectweb.asm.tree.*;
 
 public class ASMUtil implements Opcodes {
 
@@ -44,8 +41,23 @@ public class ASMUtil implements Opcodes {
         return current;
     }
 
+    public static AbstractInsnNode getMethodEnd(MethodNode methodNode) {
+        if (methodNode.instructions.size() == 0)
+            throw new IllegalStateException("Method has no instructions!");
+        
+        AbstractInsnNode end = methodNode.instructions.get(methodNode.instructions.size() - 1);
+        while (end != null && end.getOpcode() < IRETURN || end.getOpcode() > RETURN) {
+            end = end.getPrevious();
+        }
+        
+        if (end == null)
+            throw new IllegalStateException("Method does not return!");
+        
+        return end;
+    }
+
     /* ___START: value pushes___ */
-    public AbstractInsnNode pushValue(Object value) {
+    public static AbstractInsnNode getValuePush(Object value) {
         return switch (value.getClass().getSimpleName()) {
             case "Byte" -> getBytePush((byte) value);
             case "Integer" -> getIntPush((int) value);
@@ -62,9 +74,9 @@ public class ASMUtil implements Opcodes {
      * @param value Int to be pushed. MUST BE IN BOUND OF: -1 TO +5 !
      * @return Insn pushing the int
      */
-    public AbstractInsnNode getIConstPush(int value) {
+    public static AbstractInsnNode getIConstPush(int value) {
         if (value < -1 || value > 5)
-            throw new IllegalArgumentException("Value: " + value + " isn't in required bound: -1 to +5");
+            throw new IllegalStateException("Value: " + value + " isn't in required bound: -1 to +5");
 
         return new InsnNode(ICONST_0 + value);
     }
@@ -73,9 +85,9 @@ public class ASMUtil implements Opcodes {
      * @param value Int to be pushed. MUST BE EITHER 0 or 1!
      * @return Insn pushing the int
      */
-    public AbstractInsnNode getLConstPush(long value) {
+    public static AbstractInsnNode getLConstPush(long value) {
         if (value != 0 && value != 1)
-            throw new IllegalArgumentException("Invalid value: " + value + ". Value must be 0 or 1");
+            throw new IllegalStateException("Invalid value: " + value + ". Value must be 0 or 1");
 
         return new InsnNode(LCONST_0 + (int) value);
     }
@@ -84,9 +96,9 @@ public class ASMUtil implements Opcodes {
      * @param value Int to be pushed. MUST BE IN BOUND OF: 0 TO 2 !
      * @return Insn pushing the int
      */
-    public AbstractInsnNode getFConstPush(float value) {
+    public static AbstractInsnNode getFConstPush(float value) {
         if (value < 0 || value > 2)
-            throw new IllegalArgumentException("Invalid value: " + value + ". Value must be 0 or 1");
+            throw new IllegalStateException("Invalid value: " + value + ". Value must be 0 or 1");
 
         return new InsnNode(FCONST_0 + (int) value);
     }
@@ -95,21 +107,21 @@ public class ASMUtil implements Opcodes {
      * @param value Int to be pushed. MUST BE EITHER 0 or 1!
      * @return Insn pushing the int
      */
-    public AbstractInsnNode getDConstPush(double value) {
+    public static AbstractInsnNode getDConstPush(double value) {
         if (value != 0 && value != 1)
-            throw new IllegalArgumentException("Invalid value: " + value + ". Value must be 0 or 1");
+            throw new IllegalStateException("Invalid value: " + value + ". Value must be 0 or 1");
 
         return new InsnNode(DCONST_0 + (int) value);
     }
 
-    public AbstractInsnNode getBytePush(byte value) {
+    public static AbstractInsnNode getBytePush(byte value) {
         if (isIConstPush(ICONST_0 + value))
             return getIConstPush(value);
 
         return new IntInsnNode(BIPUSH, value);
     }
 
-    public AbstractInsnNode getIntPush(int value) {
+    public static AbstractInsnNode getIntPush(int value) {
         if (value >= Short.MIN_VALUE && value <= Short.MAX_VALUE)
             return getShortPush((short) value);
 
@@ -117,7 +129,7 @@ public class ASMUtil implements Opcodes {
         return new LdcInsnNode(value);
     }
 
-    public AbstractInsnNode getShortPush(short value) {
+    public static AbstractInsnNode getShortPush(short value) {
         if (isIConstPush(ICONST_0 + value))
             return getIConstPush(value);
 
@@ -127,21 +139,21 @@ public class ASMUtil implements Opcodes {
         return new IntInsnNode(SIPUSH, value);
     }
 
-    public AbstractInsnNode getLongPush(long value) {
+    public static AbstractInsnNode getLongPush(long value) {
         if (value == 0 || value == 1)
             return getLConstPush(value);
 
         return new LdcInsnNode(value);
     }
 
-    public AbstractInsnNode getFloatPush(float value) {
+    public static AbstractInsnNode getFloatPush(float value) {
         if (value >= 0 && value <= 2)
             return getFConstPush(value);
 
         return new LdcInsnNode(value);
     }
 
-    public AbstractInsnNode getDoublePush(double value) {
+    public static AbstractInsnNode getDoublePush(double value) {
         if (value == 0 || value == 2)
             return getDConstPush(value);
 
@@ -152,6 +164,10 @@ public class ASMUtil implements Opcodes {
     /* __END: get x by / based on y___ */
 
     /* ___START: checks & conditions___ */
+
+    public static boolean isValuePush(AbstractInsnNode insnNode) {
+        return insnNode instanceof LdcInsnNode || insnNode instanceof TypeInsnNode || isNumberPush(insnNode);
+    }
 
     /* ___STAR: num check start___*/
     public static boolean isNumberPush(AbstractInsnNode insnNode) {
@@ -220,6 +236,10 @@ public class ASMUtil implements Opcodes {
                 (insnNode instanceof IntInsnNode intInsnNode && intInsnNode.operand >= Short.MIN_VALUE && intInsnNode.operand <= Short.MAX_VALUE);
     }
     /* ___END: num check___*/
+
+    public static boolean isString(AbstractInsnNode insnNode) {
+        return insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String;
+    }
 
     /* ___END: checks & conditions___ */
 }

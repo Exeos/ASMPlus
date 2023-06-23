@@ -16,6 +16,8 @@ public interface PatternParts {
      * Any number push NOTE: this does not include method invocations
      */
     int P_NUMBER = -4;
+    int P_STRING = -5;
+    int P_VALUE = -6;
 
 
     /**
