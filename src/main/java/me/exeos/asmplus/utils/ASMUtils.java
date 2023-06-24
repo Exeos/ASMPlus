@@ -1,5 +1,6 @@
 package me.exeos.asmplus.utils;
 
+import me.exeos.asmplus.JarLoader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -8,11 +9,78 @@ import java.util.List;
 
 public class ASMUtils implements Opcodes {
 
+    public static JarLoader currentJar = null;
+
+    /* ___ START: Actions ___*/
+
+    public static void removeInstructions(InsnList remove, MethodNode from) {
+        for (AbstractInsnNode insnNode : remove) {
+            from.instructions.remove(insnNode);
+        }
+    }
+    /* ___ END: Actions ___ */
+
     /* ___ START: get x by / based on y ___ */
 
+    public static ClassNode getClass(String name) {
+        if (currentJar == null)
+            throw new IllegalStateException("Current jar can't be null");
+
+        return getClass(currentJar, name);
+    }
+
+    public static ClassNode getClass(JarLoader jar, String name) {
+        return jar.classes.get(name);
+    }
+
+    public static FieldNode getField(String owner, String name, String desc) {
+        return getField(owner, name, desc, null);
+    }
+
+    public static FieldNode getField(String owner, String name, String desc, String signature) {
+        if (currentJar == null)
+            throw new IllegalStateException("Current jar can't be null");
+
+        return getField(currentJar, owner, name, desc, signature);
+    }
+
+    public static FieldNode getField(JarLoader jar, String owner, String name, String desc) {
+        return getField(jar, owner, name, desc, null);
+    }
+
+    public static FieldNode getField(JarLoader jar, String owner, String name, String desc, String signature) {
+        ClassNode classNode = getClass(owner);
+        if (classNode == null)
+            throw new IllegalStateException("Owner of field can't be null");
+        else
+            return getField(classNode, name, desc, signature);
+    }
+
+    public static FieldNode getField(ClassNode classNode, String name, String desc, String signature) {
+        for (FieldNode fieldNode : classNode.fields) {
+            if (fieldNode.name.equals(name) && fieldNode.desc.equals(desc) && (signature == null || fieldNode.signature.equals(signature)))
+                return fieldNode;
+        }
+
+        return null;
+    }
+
     public static MethodNode getMethod(ClassNode owner, String name, String desc) {
+        return getMethod(owner, null, name, desc, null);
+    }
+
+    public static MethodNode getMethod(ClassNode owner, Integer access, String name, String desc) {
+        return getMethod(owner, access, name, desc, null);
+    }
+
+    public static MethodNode getMethod(ClassNode owner, String name, String desc, String signature) {
+        return getMethod(owner, null, name, desc, signature);
+    }
+
+    public static MethodNode getMethod(ClassNode owner, Integer access, String name, String desc, String signature) {
         for (MethodNode methodNode : owner.methods) {
-            if (methodNode.name.equals(name) && methodNode.desc.equals(desc))
+            if (methodNode.name.equals(name) && methodNode.desc.equals(desc) && (access == null || access == methodNode.access) &&
+                    (signature == null || signature.equals(methodNode.signature)))
                 return methodNode;
         }
 
@@ -77,7 +145,7 @@ public class ASMUtils implements Opcodes {
 
     public static AbstractInsnNode getMethodEnd(MethodNode from) {
         if (from.instructions.size() == 0)
-            throw new IllegalStateException("Method has no instructions!");
+            throw new IllegalStateException("Method has no instructions");
         
         AbstractInsnNode end = from.instructions.get(from.instructions.size() - 1);
         while (end != null && end.getOpcode() < IRETURN || end.getOpcode() > RETURN) {
@@ -85,12 +153,63 @@ public class ASMUtils implements Opcodes {
         }
         
         if (end == null)
-            throw new IllegalStateException("Method does not return!");
+            throw new IllegalStateException("Method does not return");
         
         return end;
     }
 
+    /* ___ START: value by insn ___ */
+
+    public static Object getValue(AbstractInsnNode insnNode) {
+        if (!isValuePush(insnNode))
+            throw new IllegalStateException("Instruction does not push a value");
+
+        if (isIntPush(insnNode))
+            return getIntValue(insnNode);
+        if (isLongPush(insnNode))
+            return getLongValue(insnNode);
+        return null;
+    }
+
+    public static int getIntValue(AbstractInsnNode insnNode) {
+        if (isIConstPush(insnNode.getOpcode()))
+            return insnNode.getOpcode() - 3;
+
+        return switch (insnNode.getOpcode()) {
+            case BIPUSH, SIPUSH -> ((IntInsnNode) insnNode).operand;
+            case LDC -> {
+                if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Integer)
+                    yield (int) ldcInsn.cst;
+
+                throw new IllegalStateException("Instruction doesn't represent int");
+            }
+            default -> throw new IllegalStateException("Instruction doesn't represent int");
+        };
+    }
+
+    public static byte getByteValue(AbstractInsnNode insnNode) {
+        if (isIConstPush(insnNode.getOpcode()))
+            return (byte) (insnNode.getOpcode() - 3);
+
+        if (insnNode.getOpcode() == BIPUSH)
+            return (byte) ((IntInsnNode) insnNode).operand;
+
+        throw new IllegalStateException("Instruction doesn't represent byte");
+    }
+
+    public static long getLongValue(AbstractInsnNode insnNode) {
+        if (isLConstPush(insnNode.getOpcode()))
+            return insnNode.getOpcode() - 9;
+
+        if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Long)
+            return (long) ldcInsn.cst;
+
+        throw new IllegalStateException("Instruction doesn't represent long");
+    }
+    /* ___ END: value by insn ___*/
+
     /* ___ START: value pushes___ */
+
     public static AbstractInsnNode getValuePush(Object value) {
         return switch (value.getClass().getSimpleName()) {
             case "Byte" -> getBytePush((byte) value);
