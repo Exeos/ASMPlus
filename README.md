@@ -1,7 +1,10 @@
 # ASMPlus
 Docs and guide can be found under: https://exeos.gitbook.io/asmplus/ 
 
+
 # To get a Git project into your build:
+
+https://jitpack.io/#Exeos/ASMPlus
 
 ### Step 1. Add the JitPack repository to your build file 
 ```
@@ -13,9 +16,10 @@ Docs and guide can be found under: https://exeos.gitbook.io/asmplus/
 	</repositories>
 ```
 ### Step 2. Add the dependency
-```	<dependency>
-	    <groupId>com.github.Exeos</groupId>
-	    <artifactId>ASMPlus</artifactId>
+```
+	<dependency>
+	    <groupId>com.github.User</groupId>
+	    <artifactId>Repo</artifactId>
 	    <version>Tag</version>
 	</dependency>
 ```
