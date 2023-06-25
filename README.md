@@ -4,7 +4,7 @@ Docs and guide can be found under: https://exeos.gitbook.io/asmplus/
 
 # To get a Git project into your build:
 
-https://jitpack.io/#Exeos/ASMPlus
+[![](https://jitpack.io/v/Exeos/ASMPlus.svg)](https://jitpack.io/#Exeos/ASMPlus)
 
 ### Step 1. Add the JitPack repository to your build file 
 ```
