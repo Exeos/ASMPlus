@@ -379,7 +379,7 @@ public class ASMUtils implements Opcodes {
      * @param to Label to jump to
      * @return InsnList for a random jump
      */
-    public InsnList getJump(LabelNode to) {
+    public static InsnList getJump(LabelNode to) {
         return getJump(RandomUtil.getInt(IFEQ, GOTO), to);
     }
 
@@ -388,7 +388,7 @@ public class ASMUtils implements Opcodes {
      * @param to Label to jump to
      * @return InsnList for jump
      */
-    public InsnList getJump(int jumpOpcode, LabelNode to) {
+    public static InsnList getJump(int jumpOpcode, LabelNode to) {
         InsnList jump = new InsnList();
         switch (jumpOpcode) {
             /* val == 0 */

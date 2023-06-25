@@ -26,5 +26,6 @@ replay_pid*
 # manuel
 /.idea/
 /target/
+/out/
 *.iml
 *.json
