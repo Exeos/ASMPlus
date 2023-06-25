@@ -174,14 +174,23 @@ public class ASMUtils implements Opcodes {
     /* ___ START: value by insn ___ */
 
     public static Object getValue(AbstractInsnNode insnNode) {
-        if (!isValuePush(insnNode))
-            throw new IllegalStateException("Instruction does not push a value");
-
-        if (isIntPush(insnNode))
-            return getIntValue(insnNode);
-        if (isLongPush(insnNode))
-            return getLongValue(insnNode);
-        return null;
+        if (isValuePush(insnNode)) {
+            if (isIntPush(insnNode))
+                return getIntValue(insnNode);
+            if (isBytePush(insnNode))
+                return getByteValue(insnNode);
+            if (isShortPush(insnNode))
+                return getShortValue(insnNode);
+            if (isLongPush(insnNode))
+                return getLongValue(insnNode);
+            if (isFloatPush(insnNode))
+                return getFloatValue(insnNode);
+            if (isDoublePush(insnNode))
+                return getDoubleValue(insnNode);
+            if (isString(insnNode))
+                return getStringValue(insnNode);
+        }
+        throw new IllegalStateException("Instruction does not push a value");
     }
 
     public static int getIntValue(AbstractInsnNode insnNode) {
@@ -210,17 +219,15 @@ public class ASMUtils implements Opcodes {
         throw new IllegalStateException("Instruction doesn't represent byte");
     }
 
-
-    public static byte getShortValue(AbstractInsnNode insnNode) {
+    public static short getShortValue(AbstractInsnNode insnNode) {
         if (isIConstPush(insnNode.getOpcode()))
-            return (byte) (insnNode.getOpcode() - 3);
+            return (short) (insnNode.getOpcode() - 3);
 
         if (insnNode.getOpcode() == SIPUSH)
-            return (byte) ((IntInsnNode) insnNode).operand;
+            return (short) ((IntInsnNode) insnNode).operand;
 
         throw new IllegalStateException("Instruction doesn't represent short");
     }
-
 
     public static long getLongValue(AbstractInsnNode insnNode) {
         if (isLConstPush(insnNode.getOpcode()))
@@ -228,6 +235,33 @@ public class ASMUtils implements Opcodes {
 
         if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Long)
             return (long) ldcInsn.cst;
+
+        throw new IllegalStateException("Instruction doesn't represent long");
+    }
+
+    public static double getDoubleValue(AbstractInsnNode insnNode) {
+        if (isDConstPush(insnNode.getOpcode()))
+            return insnNode.getOpcode() - 14;
+
+        if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Double)
+            return (double) ldcInsn.cst;
+
+        throw new IllegalStateException("Instruction doesn't represent long");
+    }
+
+    public static float getFloatValue(AbstractInsnNode insnNode) {
+        if (isFConstPush(insnNode.getOpcode()))
+            return insnNode.getOpcode() - 11;
+
+        if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Float)
+            return (float) ldcInsn.cst;
+
+        throw new IllegalStateException("Instruction doesn't represent long");
+    }
+
+    public static String getStringValue(AbstractInsnNode insnNode) {
+        if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String)
+            return (String) ldcInsn.cst;
 
         throw new IllegalStateException("Instruction doesn't represent long");
     }
