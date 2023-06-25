@@ -4,18 +4,31 @@ import me.exeos.asmplus.JarLoader;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
 public class ASMUtils implements Opcodes {
 
     public static JarLoader currentJar = null;
+    private static AbstractInsnNode insnNode;
 
     /* ___ START: Actions ___*/
 
     public static void removeInstructions(InsnList remove, MethodNode from) {
         for (AbstractInsnNode insnNode : remove) {
             from.instructions.remove(insnNode);
+        }
+    }
+
+    public static void setOpcode(AbstractInsnNode insnNode, int opcode) throws IllegalAccessException {
+        for (Field field : insnNode.getClass().getFields()) {
+            if (!field.getName().equals("opcode"))
+                continue;
+
+            field.setAccessible(true);
+            field.set(field, opcode);
+            break;
         }
     }
     /* ___ END: Actions ___ */
@@ -196,6 +209,18 @@ public class ASMUtils implements Opcodes {
 
         throw new IllegalStateException("Instruction doesn't represent byte");
     }
+
+
+    public static byte getShortValue(AbstractInsnNode insnNode) {
+        if (isIConstPush(insnNode.getOpcode()))
+            return (byte) (insnNode.getOpcode() - 3);
+
+        if (insnNode.getOpcode() == SIPUSH)
+            return (byte) ((IntInsnNode) insnNode).operand;
+
+        throw new IllegalStateException("Instruction doesn't represent short");
+    }
+
 
     public static long getLongValue(AbstractInsnNode insnNode) {
         if (isLConstPush(insnNode.getOpcode()))
