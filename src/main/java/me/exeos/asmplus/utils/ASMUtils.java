@@ -6,13 +6,22 @@ import org.objectweb.asm.tree.*;
 
 import java.lang.reflect.Field;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ASMUtils implements Opcodes {
 
-    public static JarLoader currentJar = null;
+    private static JarLoader currentJar = null;
+
+    public static void setJar(JarLoader jar) {
+        currentJar = jar;
+    }
 
     /* ___ START: Actions ___*/
+
+    public static void removeInstructions(AbstractInsnNode[] remove, MethodNode from) {
+        removeInstructions(Arrays.asList(remove), from);
+    }
 
     /**
      * This may look stupid but is necessary to safely remove instructions
@@ -47,6 +56,10 @@ public class ASMUtils implements Opcodes {
 
     public static ClassNode getClass(JarLoader jar, String name) {
         return jar.classes.get(name);
+    }
+
+    public static FieldNode getField(FieldInsnNode fieldInsn) {
+        return getField(fieldInsn.owner, fieldInsn.name, fieldInsn.desc);
     }
 
     public static FieldNode getField(String owner, String name, String desc) {

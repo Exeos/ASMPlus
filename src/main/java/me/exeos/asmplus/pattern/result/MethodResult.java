@@ -4,4 +4,13 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.List;
 
-public record MethodResult(MethodNode methodNode, List<InsnResult> foundPatterns) { }
+public class MethodResult {
+
+    public final MethodNode methodNode;
+    public final List<InsnResult> foundPatterns;
+
+    public MethodResult(MethodNode methodNode, List<InsnResult> foundPatterns) {
+        this.methodNode = methodNode;
+        this.foundPatterns = foundPatterns;
+    }
+}
