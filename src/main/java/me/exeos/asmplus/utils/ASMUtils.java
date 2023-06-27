@@ -11,13 +11,16 @@ import java.util.List;
 public class ASMUtils implements Opcodes {
 
     public static JarLoader currentJar = null;
-    private static AbstractInsnNode insnNode;
 
     /* ___ START: Actions ___*/
 
-    public static void removeInstructions(InsnList remove, MethodNode from) {
-        for (AbstractInsnNode insnNode : remove) {
-            from.instructions.remove(insnNode);
+    /**
+     * This may look stupid but is necessary to safely remove instructions
+     */
+    public static void removeInstructions(List<AbstractInsnNode> remove, MethodNode from) {
+        for (AbstractInsnNode toRemove : remove) {
+            if (isPresent(toRemove, from))
+                from.instructions.remove(toRemove);
         }
     }
 
@@ -490,6 +493,47 @@ public class ASMUtils implements Opcodes {
     /* ___ END: jumps ___ */
 
     /* ___ END: get x by / based on y ___ */
+
+    /**
+     * @return New clean method returning the same type as arg methodNode
+     */
+    public static MethodNode getCleanMethod(MethodNode methodNode) {
+        AbstractInsnNode end = getMethodEnd(methodNode);
+        if (end == null)
+            throw new IllegalArgumentException("Invalid method: " + methodNode.name);
+
+        methodNode.instructions.clear();
+        methodNode.tryCatchBlocks.clear();
+        methodNode.localVariables.clear();
+        methodNode.maxLocals = 0;
+        methodNode.maxStack = 1;
+
+        InsnList clean = new InsnList();
+
+        if (end.getOpcode() != RETURN)
+            clean.add(switch (end.getOpcode()) {
+                case IRETURN -> getIConstPush(0);
+                case LRETURN -> getLConstPush(0);
+                case FRETURN -> getFConstPush(0);
+                case DRETURN -> getDConstPush(0);
+                case ARETURN -> new InsnNode(ACONST_NULL);
+                default -> throw new IllegalArgumentException("Invalid return type: " + end.getOpcode());
+            });
+        clean.add(end);
+        methodNode.instructions.add(end);
+
+        return methodNode;
+    }
+
+    /**
+     * Returns if insn is present in method, this can be used to avoid concurrent-modification exceptions or nullpointer exceptions when removing insns
+     * @param insnNode insn to check for
+     * @param in method that should contai insn
+     * @return present or nut
+     */
+    public static boolean isPresent(AbstractInsnNode insnNode, MethodNode in) {
+        return in.instructions.indexOf(insnNode) >= 0;
+    }
 
     /* ___ START: checks & conditions ___ */
 
