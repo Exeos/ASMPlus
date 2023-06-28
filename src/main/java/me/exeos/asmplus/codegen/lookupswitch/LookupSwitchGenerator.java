@@ -1,11 +1,9 @@
 package me.exeos.asmplus.codegen.lookupswitch;
 
 import org.objectweb.asm.Opcodes;
-import org.objectweb.asm.tree.InsnList;
-import org.objectweb.asm.tree.JumpInsnNode;
-import org.objectweb.asm.tree.LabelNode;
-import org.objectweb.asm.tree.LookupSwitchInsnNode;
+import org.objectweb.asm.tree.*;
 
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 
@@ -32,18 +30,18 @@ public class LookupSwitchGenerator implements Opcodes {
      * Generate a new lookup switch
      * @return Lookup switch instructions
      */
-    public InsnList gen() {
-        InsnList instructions = new InsnList();
+    public List<AbstractInsnNode> gen() {
+        List<AbstractInsnNode> instructions = new ArrayList<>();
 
         instructions.add(new LookupSwitchInsnNode(dfltCase != null ? dfltCase.caseStart : switchEnd, getKeys(), getLabels()));
         for (SwitchCase switchCase : cases) {
             instructions.add(switchCase.caseStart);
-            instructions.add(switchCase.instructions);
+            instructions.addAll(switchCase.instructions);
             instructions.add(new JumpInsnNode(GOTO, switchEnd));
         }
         if (dfltCase != null) {
             instructions.add(dfltCase.caseStart);
-            instructions.add(dfltCase.instructions);
+            instructions.addAll(dfltCase.instructions);
             instructions.add(new JumpInsnNode(GOTO, switchEnd));
         }
         instructions.add(switchEnd);

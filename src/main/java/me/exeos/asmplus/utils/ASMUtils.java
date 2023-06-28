@@ -19,6 +19,16 @@ public class ASMUtils implements Opcodes {
 
     /* ___ START: Actions ___*/
 
+    public static void addInstructions(AbstractInsnNode[] add, MethodNode from) {
+        removeInstructions(Arrays.asList(add), from);
+    }
+
+    public static void addInstructions(List<AbstractInsnNode> add, MethodNode from) {
+        for (AbstractInsnNode toAdd : add) {
+            from.instructions.add(toAdd);
+        }
+    }
+
     public static void removeInstructions(AbstractInsnNode[] remove, MethodNode from) {
         removeInstructions(Arrays.asList(remove), from);
     }
@@ -114,6 +124,34 @@ public class ASMUtils implements Opcodes {
         }
 
         return null;
+    }
+
+    /**
+     * This is here because InsnList is stupid and buggy
+     * @return converted to List<AbstractInsnNode>
+     */
+
+    public static List<AbstractInsnNode> convertToJList(InsnList insnList) {
+        List<AbstractInsnNode> converted = new ArrayList<>();
+        for (AbstractInsnNode insnNode : insnList) {
+            converted.add(insnNode);
+        }
+
+        return converted;
+    }
+
+    /**
+     * This is here because InsnList is stupid and buggy
+     * @return converted to InsnList
+     */
+
+    public static InsnList convertToIList(List<AbstractInsnNode> list) {
+        InsnList converted = new InsnList();
+        for (AbstractInsnNode insnNode : list) {
+            converted.add(insnNode);
+        }
+
+        return converted;
     }
 
     /**
@@ -393,19 +431,19 @@ public class ASMUtils implements Opcodes {
 
     /**
      * @param to Label to jump to
-     * @return InsnList for a random jump
+     * @return List<AbstractInsnNode> for a random jump
      */
-    public static InsnList getJump(LabelNode to) {
+    public static List<AbstractInsnNode> getJump(LabelNode to) {
         return getJump(RandomUtil.getInt(IFEQ, GOTO), to);
     }
 
     /**
      * @param jumpOpcode Jump insn to use
      * @param to Label to jump to
-     * @return InsnList for jump
+     * @return List<AbstractInsnNode></> for jump
      */
-    public static InsnList getJump(int jumpOpcode, LabelNode to) {
-        InsnList jump = new InsnList();
+    public static List<AbstractInsnNode> getJump(int jumpOpcode, LabelNode to) {
+        List<AbstractInsnNode> jump = new ArrayList<>();
         switch (jumpOpcode) {
             /* val == 0 */
             case IFEQ -> {
@@ -521,7 +559,7 @@ public class ASMUtils implements Opcodes {
         methodNode.maxLocals = 0;
         methodNode.maxStack = 1;
 
-        InsnList clean = new InsnList();
+        List<AbstractInsnNode> clean = new ArrayList<>();
 
         if (end.getOpcode() != RETURN)
             clean.add(switch (end.getOpcode()) {
@@ -533,7 +571,7 @@ public class ASMUtils implements Opcodes {
                 default -> throw new IllegalArgumentException("Invalid return type: " + end.getOpcode());
             });
         clean.add(end);
-        methodNode.instructions.add(end);
+        addInstructions(clean, methodNode);
 
         return methodNode;
     }
