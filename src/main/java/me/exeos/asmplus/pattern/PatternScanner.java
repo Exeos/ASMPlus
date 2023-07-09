@@ -141,7 +141,7 @@ public class PatternScanner implements PatternParts, Opcodes {
         return Arrays.asList(Arrays.stream(pattern).boxed().toArray(Integer[]::new)).contains(P_SKIPTO);
     }
 
-    private boolean match(AbstractInsnNode toCheck, int part) {
+    protected boolean match(AbstractInsnNode toCheck, int part) {
         return part == P_ANY || (part == P_NUMBER && ASMUtils.isNumberPush(toCheck)) || (part == P_STRING && ASMUtils.isString(toCheck)) ||
                 (part == P_VALUE && ASMUtils.isValuePush(toCheck)) || toCheck.getOpcode() == part || toCheck.getType() == part - 300;
     }

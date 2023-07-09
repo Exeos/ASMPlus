@@ -49,7 +49,7 @@ public class LookupSwitchGenerator implements Opcodes {
         return instructions;
     }
 
-    private int[] getKeys() {
+    protected int[] getKeys() {
         int[] keys = new int[cases.size()];
 
         for (int i = 0; i < cases.size(); i++) {
@@ -59,7 +59,7 @@ public class LookupSwitchGenerator implements Opcodes {
         return keys;
     }
 
-    private LabelNode[] getLabels() {
+    protected LabelNode[] getLabels() {
         LabelNode[] labels = new LabelNode[cases.size()];
 
         for (int i = 0; i < cases.size(); i++) {

@@ -26,8 +26,8 @@ public class JarLoader {
     public final HashMap<String, ClassNode> classes = new HashMap<>();
     public final HashMap<String, byte[]> resources = new HashMap<>();
 
-    private FileTime creationTime;
-    private FileTime lastModifiedTime;
+    protected FileTime creationTime;
+    protected FileTime lastModifiedTime;
 
     /**
      * Load all classes and files of jar to HashMaps in form of:
@@ -92,7 +92,7 @@ public class JarLoader {
         attributeView.setTimes(lastModifiedTime, null, creationTime);
     }
 
-    private void writeJarEntry(JarOutputStream outputStream, String name, byte[] bytes) throws IOException {
+    protected void writeJarEntry(JarOutputStream outputStream, String name, byte[] bytes) throws IOException {
         JarEntry entry = new JarEntry(new String(name.getBytes(StandardCharsets.UTF_8), StandardCharsets.UTF_8));
 
         if (creationTime != null)
