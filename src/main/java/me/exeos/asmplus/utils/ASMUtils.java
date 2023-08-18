@@ -1,6 +1,7 @@
 package me.exeos.asmplus.utils;
 
 import me.exeos.asmplus.JarLoader;
+import me.exeos.asmplus.descarg.DescArg;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
@@ -124,6 +125,56 @@ public class ASMUtils implements Opcodes {
         }
 
         return null;
+    }
+
+    /**
+     * @return array of args from method. coming from " (BIZLme/exeos/Main;S)V " this may look like:
+     * B | false
+     * I | false
+     * Z | false
+     * me/exeos/Main | true
+     * S | false
+     */
+    public static DescArg[] getMethodArgs(MethodNode methodNode) {
+        return getMethodArgs(methodNode.desc);
+    }
+
+    public static DescArg[] getMethodArgs(String methodDesc) {
+        ArrayList<DescArg> args = new ArrayList<>();
+
+        boolean phrasing = false;
+        boolean phrasingArg = false;
+        StringBuilder argBuilder = new StringBuilder();
+
+        for (char c : methodDesc.toCharArray()) {
+            if (c == '(')  {
+                phrasing = true;
+                continue;
+            }
+            if (c == ')')  {
+                break;
+            }
+            if (!phrasing) {
+                continue;
+            }
+
+            if (c == 'L') {
+                phrasingArg = true;
+                continue;
+            }
+            if (c == ';') {
+                args.add(new DescArg(argBuilder.toString(), true));
+                argBuilder = new StringBuilder();
+                phrasingArg = false;
+                continue;
+            }
+            if (phrasingArg) {
+                argBuilder.append(c);
+            } else
+                args.add(new DescArg(String.valueOf(c), false));
+        }
+
+        return args.toArray(args.toArray(new DescArg[0]));
     }
 
     /**
