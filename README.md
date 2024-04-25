@@ -1,3 +1,6 @@
+# Discontinued!
+The public version of ASMPlus will no longer be updated. There may be a new version in the future
+
 # ASMPlus
 Docs and guide can be found under: https://exeos.gitbook.io/asmplus/ 
 
