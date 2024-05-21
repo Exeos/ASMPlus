@@ -25,8 +25,8 @@ import java.util.jar.JarOutputStream;
 
 public class JarLoader {
 
-    public final HashMap<String, ClassNode> classes = new HashMap<>();
-    public final HashMap<String, byte[]> resources = new HashMap<>();
+    public HashMap<String, ClassNode> classes = new HashMap<>();
+    public HashMap<String, byte[]> resources = new HashMap<>();
 
     protected FileTime creationTime;
     protected FileTime lastModifiedTime;
@@ -76,9 +76,7 @@ public class JarLoader {
      */
 
     public void export(String inputPath) throws Exception {
-        if (!new File(new File(inputPath).getParent()).mkdirs()) {
-            System.out.println("Failed to mkdirs");
-        }
+        new File(new File(inputPath).getParent()).mkdirs();
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(inputPath));
         for (Map.Entry<String, ClassNode> entry : classes.entrySet()) {
             ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
@@ -112,7 +110,7 @@ public class JarLoader {
         outputStream.closeEntry();
     }
 
-    private boolean isClass(byte[] file) {
+    protected boolean isClass(byte[] file) {
         if (file.length < 4)
             return false;
         return new BigInteger(1, new byte[] { file[0], file[1], file[2], file[3] }).intValue() == -889275714;
