@@ -1,6 +1,7 @@
 package me.exeos.asmplus.utils;
 
 import me.exeos.asmplus.JarLoader;
+import me.exeos.asmplus.codegen.code.Jump;
 import me.exeos.asmplus.descarg.DescArg;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
@@ -254,8 +255,9 @@ public class ASMUtils implements Opcodes {
     public static List<LabelNode> getMethodLabels(MethodNode from) {
         List<LabelNode> labels = new ArrayList<>();
         for (AbstractInsnNode insnNode : from.instructions) {
-            if (insnNode instanceof LabelNode labelNode)
-                labels.add(labelNode);
+            if (insnNode instanceof LabelNode) {
+                labels.add((LabelNode) insnNode);
+            }
         }
 
         return labels;
@@ -263,15 +265,17 @@ public class ASMUtils implements Opcodes {
 
     public static AbstractInsnNode getMethodEnd(MethodNode from) {
         if (from.instructions.size() == 0)
-            throw new IllegalStateException("Method has no instructions");
+            return null;
         
         AbstractInsnNode end = from.instructions.get(from.instructions.size() - 1);
-        while (end != null && end.getOpcode() < IRETURN || end.getOpcode() > RETURN) {
-            end = end.getPrevious();
+        if (end != null) {
+            while (end.getOpcode() < IRETURN || end.getOpcode() > RETURN) {
+                end = end.getPrevious();
+
+                if (end == null)
+                    break;
+            }
         }
-        
-        if (end == null)
-            throw new IllegalStateException("Method does not return");
         
         return end;
     }
@@ -302,16 +306,21 @@ public class ASMUtils implements Opcodes {
         if (isIConstPush(insnNode.getOpcode()))
             return insnNode.getOpcode() - 3;
 
-        return switch (insnNode.getOpcode()) {
-            case BIPUSH, SIPUSH -> ((IntInsnNode) insnNode).operand;
-            case LDC -> {
-                if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Integer)
-                    yield (int) ldcInsn.cst;
-
+        switch (insnNode.getOpcode()) {
+            case BIPUSH:
+            case SIPUSH:
+                 return ((IntInsnNode) insnNode).operand;
+            case LDC:
+                if (insnNode instanceof LdcInsnNode) {
+                    LdcInsnNode ldcInsn = (LdcInsnNode) insnNode;
+                    if (ldcInsn.cst instanceof Integer) {
+                        return (int)ldcInsn.cst;
+                    }
+                }
                 throw new IllegalStateException("Instruction doesn't represent int");
-            }
-            default -> throw new IllegalStateException("Instruction doesn't represent int");
-        };
+            default:
+                throw new IllegalStateException("Instruction doesn't represent int");
+        }
     }
 
     public static byte getByteValue(AbstractInsnNode insnNode) {
@@ -338,8 +347,12 @@ public class ASMUtils implements Opcodes {
         if (isLConstPush(insnNode.getOpcode()))
             return insnNode.getOpcode() - 9;
 
-        if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Long)
-            return (long) ldcInsn.cst;
+        if (insnNode instanceof LdcInsnNode) {
+            LdcInsnNode ldcInsn = (LdcInsnNode) insnNode;
+            if (ldcInsn.cst instanceof Long) {
+                return (long) ldcInsn.cst;
+            }
+        }
 
         throw new IllegalStateException("Instruction doesn't represent long");
     }
@@ -348,8 +361,12 @@ public class ASMUtils implements Opcodes {
         if (isDConstPush(insnNode.getOpcode()))
             return insnNode.getOpcode() - 14;
 
-        if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Double)
-            return (double) ldcInsn.cst;
+        if (insnNode instanceof LdcInsnNode) {
+            LdcInsnNode ldcInsn = (LdcInsnNode) insnNode;
+            if (ldcInsn.cst instanceof Double) {
+                return (double) ldcInsn.cst;
+            }
+        }
 
         throw new IllegalStateException("Instruction doesn't represent long");
     }
@@ -358,15 +375,23 @@ public class ASMUtils implements Opcodes {
         if (isFConstPush(insnNode.getOpcode()))
             return insnNode.getOpcode() - 11;
 
-        if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof Float)
-            return (float) ldcInsn.cst;
+        if (insnNode instanceof LdcInsnNode) {
+            LdcInsnNode ldcInsn = (LdcInsnNode) insnNode;
+            if (ldcInsn.cst instanceof Float) {
+                return (float) ldcInsn.cst;
+            }
+        }
 
         throw new IllegalStateException("Instruction doesn't represent long");
     }
 
     public static String getStringValue(AbstractInsnNode insnNode) {
-        if (insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String)
-            return (String) ldcInsn.cst;
+        if (insnNode instanceof LdcInsnNode) {
+            LdcInsnNode ldcInsn = (LdcInsnNode) insnNode;
+            if (ldcInsn.cst instanceof String) {
+                return (String) ldcInsn.cst;
+            }
+        }
 
         throw new IllegalStateException("Instruction doesn't represent long");
     }
@@ -375,16 +400,24 @@ public class ASMUtils implements Opcodes {
     /* ___ START: value pushes___ */
 
     public static AbstractInsnNode getValuePush(Object value) {
-        return switch (value.getClass().getSimpleName()) {
-            case "Byte" -> getBytePush((byte) value);
-            case "Integer" -> getIntPush((int) value);
-            case "Long" -> getLongPush((long) value);
-            case "Short" -> getShortPush((short) value);
-            case "Float" -> getFloatPush((float) value);
-            case "Double" -> getDoublePush((double) value);
-            case "String" -> new LdcInsnNode(value);
-            default -> throw new IllegalStateException("Unexpected value type: " + value.getClass().getSimpleName());
-        };
+        switch (value.getClass().getSimpleName()) {
+            case "Byte":
+                return getBytePush((byte) value);
+            case "Integer":
+                return getIntPush((int) value);
+            case "Long":
+                return getLongPush((long) value);
+            case "Short":
+                return getShortPush((short) value);
+            case "Float":
+                return getFloatPush((float) value);
+            case "Double":
+                return getDoublePush((double) value);
+            case "String":
+                return new LdcInsnNode(value);
+            default:
+                throw new IllegalStateException("Unexpected value type: " + value.getClass().getSimpleName());
+        }
     }
 
     /**
@@ -484,8 +517,8 @@ public class ASMUtils implements Opcodes {
      * @param to Label to jump to
      * @return List<AbstractInsnNode> for a random jump
      */
-    public static List<AbstractInsnNode> getJump(LabelNode to) {
-        return getJump(RandomUtil.getInt(IFEQ, GOTO), to);
+    public static List<AbstractInsnNode> getJumpInsns(LabelNode to) {
+        return getJumpInsns(RandomUtil.getInt(IFEQ, IF_ICMPLT), to);
     }
 
     /**
@@ -493,106 +526,150 @@ public class ASMUtils implements Opcodes {
      * @param to Label to jump to
      * @return List<AbstractInsnNode></> for jump
      */
-    public static List<AbstractInsnNode> getJump(int jumpOpcode, LabelNode to) {
-        List<AbstractInsnNode> jump = new ArrayList<>();
+    public static List<AbstractInsnNode> getJumpInsns(int jumpOpcode, LabelNode to) {
+        return getJump(jumpOpcode, to).getJump();
+    }
+
+    /**
+     * @param to Label to jump to
+     * @return List<AbstractInsnNode> for a random jump
+     */
+    public static Jump getJump(LabelNode to) {
+        return getJump(RandomUtil.getInt(IFEQ, IF_ICMPLT), to);
+    }
+
+    /**
+     * @param jumpOpcode Jump insn to use
+     * @param to Label to jump to
+     * @return List<AbstractInsnNode></> for jump
+     */
+    public static Jump getJump(int jumpOpcode, LabelNode to) {
+        if (true) {
+//        if (jumpOpcode >= IF_ICMPGE) {
+            jumpOpcode = GOTO;
+        }
+        Jump jump = new Jump();
         switch (jumpOpcode) {
             /* val == 0 */
-            case IFEQ -> {
+            case IFEQ:
                 jump.add(new InsnNode(ICONST_0));
-                jump.add(new JumpInsnNode(IFEQ, to));
-            }
+                break;
             /* val != 0 */
-            case IFNE -> {
+            case IFNE:
                 jump.add(new InsnNode(ICONST_1));
-                jump.add(new JumpInsnNode(IFNE, to));
-            }
+                break;
             /* val < 0 */
-            case IFLT -> {
+            case IFLT:
                 jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, -1)));
-                jump.add(new JumpInsnNode(IFLT, to));
-            }
+                break;
             /* val >= 0 */
-            case IFGE -> {
+            case IFGE:
                 jump.add(getIntPush(RandomUtil.getInt(0, Integer.MAX_VALUE)));
-                jump.add(new JumpInsnNode(IFGE, to));
-            }
+                break;
             /* val > 0 */
-            case IFGT -> {
+            case IFGT:
                 jump.add(getIntPush(RandomUtil.getInt(1, Integer.MAX_VALUE)));
-                jump.add(new JumpInsnNode(IFGT, to));
-            }
+                break;
             /* val <= 0 */
-            case IFLE -> {
+            case IFLE:
                 jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, 0)));
-                jump.add(new JumpInsnNode(IFLE, to));
-            }
+                break;
             /* int0 == int1 */
-            case IF_ICMPEQ -> {
+            case IF_ICMPEQ:
                 jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, Integer.MAX_VALUE)));
                 jump.add(new InsnNode(DUP));
-                jump.add(new JumpInsnNode(IF_ICMPEQ, to));
-            }
+                break;
             /* int0 != int1 */
-            case IF_ICMPNE -> {
+            case IF_ICMPNE:
                 jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, 0)));
                 jump.add(getIntPush(RandomUtil.getInt(1, Integer.MAX_VALUE)));
-
-                jump.add(new JumpInsnNode(IF_ICMPNE, to));
-            }
+                break;
             /* int0 < int 1*/
-            case IF_ICMPLT -> {
-                int less = RandomUtil.getInt(Integer.MIN_VALUE, Integer.MAX_VALUE - 1);
+            case IF_ICMPLT:
+            {
+                int less = RandomUtil.getInt(Integer.MIN_VALUE, Integer.MAX_VALUE - 10);
 
-                jump.add(getIntPush(less));
                 jump.add(getIntPush(RandomUtil.getInt(less + 1, Integer.MAX_VALUE)));
-
-                jump.add(new JumpInsnNode(IF_ICMPLT, to));
+                jump.add(getIntPush(less));
             }
+            break;
             /* int0 >= int1 */
-            case IF_ICMPGE -> {
-                int more = RandomUtil.getInt(Integer.MIN_VALUE + 1, Integer.MAX_VALUE);
+            case IF_ICMPGE: // bis hier
+            {
+                int more = RandomUtil.getInt(0, Integer.MAX_VALUE);
 
                 jump.add(getIntPush(more));
                 jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, more)));
-                jump.add(new JumpInsnNode(IF_ICMPGE, to));
             }
+            break;
             /* int0 > int1 */
-            case IF_ICMPGT -> {
-                int more = RandomUtil.getInt(Integer.MIN_VALUE + 1, Integer.MAX_VALUE);
+            case IF_ICMPGT:
+            {
+                int more = RandomUtil.getInt(Integer.MIN_VALUE + 10, Integer.MAX_VALUE);
 
-                jump.add(getIntPush(more));
                 jump.add(getIntPush(RandomUtil.getInt(Integer.MIN_VALUE, more - 1)));
-                jump.add(new JumpInsnNode(IF_ICMPGT, to));
+                jump.add(getIntPush(more));
             }
+            break;
             /* int0 <= int1 */
-            case IF_ICMPLE -> {
+            case IF_ICMPLE:
+            {
                 int less = RandomUtil.getInt(Integer.MIN_VALUE, Integer.MAX_VALUE - 1);
 
                 jump.add(getIntPush(less));
                 jump.add(getIntPush(RandomUtil.getInt(less, Integer.MAX_VALUE)));
-
-                jump.add(new JumpInsnNode(IF_ICMPLE, to));
             }
+            break;
             /* object0 == object1 */
-            case IF_ACMPEQ -> {
+            case IF_ACMPEQ:
                 jump.add(new TypeInsnNode(NEW, "java/lang/String"));
                 jump.add(new InsnNode(DUP));
-
-                jump.add(new JumpInsnNode(IF_ACMPEQ, to));
-            }
+                break;
             /* object0 != object1 */
-            case IF_ACMPNE -> {
+            case IF_ACMPNE:
                 jump.add(new TypeInsnNode(NEW, "java/lang/String"));
                 jump.add(new TypeInsnNode(NEW, "java/lang/Integer"));
-
-                jump.add(new JumpInsnNode(IF_ACMPNE, to));
-            }
+                break;
             /* direct jump to label */
-            case GOTO -> jump.add(new JumpInsnNode(GOTO, to));
+            case GOTO:
+                /* Goto is the default opcode of jump */
+                break;
+            default:
+                System.out.println("This branch should never be reached. Opcode: " + jumpOpcode);
         }
-        return jump;
+
+        return jump.setOpcode(jumpOpcode).setLabel(to);
     }
+
     /* ___ END: jumps ___ */
+
+    /**
+     * @param debugMessage String in LDC
+     * @return LDC Insn with debugMessage,which gets poped right after
+     */
+
+    public static List<AbstractInsnNode> getDebugInsn(String debugMessage) {
+        ArrayList<AbstractInsnNode> insnNodes = new ArrayList<>();
+        insnNodes.add(new LdcInsnNode(debugMessage));
+        insnNodes.add(new InsnNode(POP));
+
+        return insnNodes;
+    }
+
+    public static List<AbstractInsnNode> getCheckCastMessage(String message) {
+        return getCheckCastMessage(message, true);
+    }
+
+    public static List<AbstractInsnNode> getCheckCastMessage(String message, boolean pop) {
+        ArrayList<AbstractInsnNode> insns = new ArrayList<>();
+
+        insns.add(new InsnNode(ACONST_NULL));
+        insns.add(new TypeInsnNode(CHECKCAST, "L" + message.replace(" ", "") + ";"));
+        if (pop)
+            insns.add(new InsnNode(POP));
+
+        return insns;
+    }
 
     /* ___ END: get x by / based on y ___ */
 
@@ -612,15 +689,26 @@ public class ASMUtils implements Opcodes {
 
         List<AbstractInsnNode> clean = new ArrayList<>();
 
-        if (end.getOpcode() != RETURN)
-            clean.add(switch (end.getOpcode()) {
-                case IRETURN -> getIConstPush(0);
-                case LRETURN -> getLConstPush(0);
-                case FRETURN -> getFConstPush(0);
-                case DRETURN -> getDConstPush(0);
-                case ARETURN -> new InsnNode(ACONST_NULL);
-                default -> throw new IllegalArgumentException("Invalid return type: " + end.getOpcode());
-            });
+        if (end.getOpcode() != RETURN) {
+            switch (end.getOpcode()) {
+                case IRETURN:
+                    clean.add(getIConstPush(0));
+                    break;
+                case LRETURN:
+                    clean.add(getLConstPush(0));
+                    break;
+                case FRETURN:
+                    clean.add(getFConstPush(0));
+                    break;
+                case DRETURN:
+                    clean.add(getDConstPush(0));
+                    break;
+                case ARETURN:
+                    clean.add(new InsnNode(ACONST_NULL));
+                    break;
+                default: throw new IllegalArgumentException("Invalid return type: " + end.getOpcode());
+            }
+        }
         clean.add(end);
         addInstructions(clean, methodNode);
 
@@ -686,33 +774,36 @@ public class ASMUtils implements Opcodes {
     }
 
     public static boolean isDoublePush(AbstractInsnNode insnNode) {
-        return isDConstPush(insnNode.getOpcode()) ||
-                (insnNode instanceof LdcInsnNode ldcInsnNode && ldcInsnNode.cst instanceof Double);
+        return isDConstPush(insnNode.getOpcode()) || (insnNode instanceof LdcInsnNode && ((LdcInsnNode) insnNode).cst instanceof Double);
     }
 
     public static boolean isFloatPush(AbstractInsnNode insnNode) {
         return isFConstPush(insnNode.getOpcode()) ||
-                (insnNode instanceof LdcInsnNode ldcInsnNode && ldcInsnNode.cst instanceof Float);
+                (insnNode instanceof LdcInsnNode && ((LdcInsnNode) insnNode).cst instanceof Float);
     }
 
     public static boolean isIntPush(AbstractInsnNode insnNode) {
         return isIConstPush(insnNode.getOpcode()) || insnNode instanceof IntInsnNode ||
-                (insnNode instanceof LdcInsnNode ldcInsnNode && ldcInsnNode.cst instanceof Integer);
+                (insnNode instanceof LdcInsnNode && ((LdcInsnNode) insnNode).cst instanceof Integer);
     }
 
     public static boolean isLongPush(AbstractInsnNode insnNode) {
         return isLConstPush(insnNode.getOpcode()) ||
-                (insnNode instanceof LdcInsnNode ldcInsnNode && ldcInsnNode.cst instanceof Long);
+                (insnNode instanceof LdcInsnNode && ((LdcInsnNode) insnNode).cst instanceof Long);
     }
 
     public static boolean isShortPush(AbstractInsnNode insnNode) {
         return isIConstPush(insnNode.getOpcode()) ||
-                (insnNode instanceof IntInsnNode intInsnNode && intInsnNode.operand >= Short.MIN_VALUE && intInsnNode.operand <= Short.MAX_VALUE);
+                (insnNode instanceof IntInsnNode && ((IntInsnNode) insnNode).operand >= Short.MIN_VALUE && ((IntInsnNode) insnNode).operand <= Short.MAX_VALUE);
     }
     /* ___ END: num check ___*/
 
     public static boolean isString(AbstractInsnNode insnNode) {
-        return insnNode instanceof LdcInsnNode ldcInsn && ldcInsn.cst instanceof String;
+        return insnNode instanceof LdcInsnNode && ((LdcInsnNode) insnNode).cst instanceof String;
+    }
+
+    public static boolean isJumpOrCondition(AbstractInsnNode insnNode) {
+        return insnNode.getOpcode() >= IFEQ && insnNode.getOpcode() <= GOTO;
     }
 
     /* ___ END: checks & conditions ___ */

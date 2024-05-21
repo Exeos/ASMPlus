@@ -1,19 +1,36 @@
 package me.exeos.asmplus.utils;
 
-import java.util.Random;
+import java.security.SecureRandom;
 
 public class RandomUtil {
 
-    private static final Random RANDOM = new Random();
 
     public static int getInt() {
-        return RANDOM.nextInt();
+        return getInt(Integer.MIN_VALUE, Integer.MAX_VALUE);
     }
 
     public static int getInt(int min, int max) {
         if (min == max)
             return min;
 
-        return RANDOM.nextInt(min, max);
+        if (min > max) {
+            throw new IllegalArgumentException("Max must be greater than min");
+        }
+
+        return (int) ((Math.random() * (max - min)) + min);
+    }
+
+    public static boolean chance(int percentage) {
+        if (percentage < 0 || percentage > 100) {
+            throw new IllegalArgumentException("Percentage must be between 0 - 100");
+        }
+        return percentage <= getInt(0, 100);
+    }
+
+    public static byte[] getBytes(int length) {
+        byte[] randomBytes = new byte[length];
+        SecureRandom secureRandom = new SecureRandom();
+        secureRandom.nextBytes(randomBytes);
+        return randomBytes;
     }
 }

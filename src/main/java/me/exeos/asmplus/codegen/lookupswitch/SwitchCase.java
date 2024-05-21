@@ -17,10 +17,20 @@ public class SwitchCase {
         caseStart = new LabelNode();
 
         switch (key.getClass().getName()) {
-            case "java.lang.Integer", "java.lang.Byte", "java.lang.Short", "java.lang.Character" -> this.key = (int) key;
-            case "java.lang.String" -> this.key = key.hashCode();
-            case "java.lang.Enum" -> this.key = ((Enum<?>) key).ordinal();
-            default -> throw new IllegalStateException("Key must be type of: char, byte, short, int, String or enum");
+            case "java.lang.Integer":
+            case "java.lang.Byte":
+            case "java.lang.Short":
+            case "java.lang.Character":
+                this.key = (int) key;
+                break;
+            case "java.lang.String":
+                this.key = key.hashCode();
+                break;
+            case "java.lang.Enum":
+                this.key = ((Enum<?>) key).ordinal();
+                break;
+            default:
+                throw new IllegalStateException("Key must be type of: char, byte, short, int, String or enum");
         }
     }
 }

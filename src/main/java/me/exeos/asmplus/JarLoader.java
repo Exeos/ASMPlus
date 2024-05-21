@@ -1,9 +1,11 @@
 package me.exeos.asmplus;
 
+import me.exeos.asmplus.utils.StreamUtils;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.tree.ClassNode;
 
+import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -41,24 +43,24 @@ public class JarLoader {
     public void load(String inputPath) throws IOException {
         JarFile jarIn = new JarFile(inputPath);
         Enumeration<? extends JarEntry> entries = jarIn.entries();
-        JarEntry entry = entries.nextElement();
+        JarEntry entry;
 
         while (entries.hasMoreElements()) {
+            entry = entries.nextElement();
+            if (!entry.isDirectory()) {
+                InputStream stream = jarIn.getInputStream(entry);
+                byte[] entryBytes = StreamUtils.readAllBytes(stream);
 
-            InputStream stream = jarIn.getInputStream(entry);
-            byte[] entryBytes = stream.readAllBytes();
-
-            if (isClass(entryBytes)) {
-                if (entry.getRealName().endsWith(".class")) {
+                if (isClass(entryBytes) && entry.getName().endsWith(".class")) {
                     ClassReader classReader = new ClassReader(entryBytes);
                     ClassNode classNode = new ClassNode();
 
                     classReader.accept(classNode, ClassReader.SKIP_FRAMES + ClassReader.SKIP_DEBUG);
                     classes.put(classNode.name, classNode);
+                } else {
+                    resources.put(entry.getName(), entryBytes);
                 }
-            } else resources.put(entry.getRealName(), entryBytes);
-
-            entry = entries.nextElement();
+            }
         }
 
         BasicFileAttributes attributes = Files.getFileAttributeView(Paths.get(inputPath), BasicFileAttributeView.class).readAttributes();
@@ -73,7 +75,10 @@ public class JarLoader {
      * @throws IOException
      */
 
-    public void export(String inputPath) throws IOException {
+    public void export(String inputPath) throws Exception {
+        if (!new File(new File(inputPath).getParent()).mkdirs()) {
+            System.out.println("Failed to mkdirs");
+        }
         JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(inputPath));
         for (Map.Entry<String, ClassNode> entry : classes.entrySet()) {
             ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
