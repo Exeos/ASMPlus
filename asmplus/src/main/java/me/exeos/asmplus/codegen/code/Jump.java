@@ -57,7 +57,7 @@ public class Jump {
 
     /**
      * Set the jump opcode
-     * @not_null opcode
+     * @param opcode new jump opcode
      * @return Instance of current Object
     */
     public Jump setOpcode(int opcode) {
@@ -71,7 +71,7 @@ public class Jump {
 
     /**
      * Set the jump target label
-     * @not_null label
+     * @param label new label
      * @return Instance of current Object
      */
     public Jump setLabel(LabelNode label) {
