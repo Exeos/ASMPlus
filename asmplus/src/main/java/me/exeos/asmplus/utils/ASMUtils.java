@@ -21,6 +21,16 @@ public class ASMUtils implements Opcodes {
 
     /* ___ START: Actions ___*/
 
+    public static void removeDebugInfos(ClassNode classNode) {
+        classNode.sourceFile = null;
+        classNode.sourceDebug = null;
+    }
+
+    public static void removeDebugInfos(MethodNode methodNode) {
+        methodNode.localVariables = null;
+        methodNode.parameters = null;
+    }
+
     public static void addInstructions(AbstractInsnNode[] add, MethodNode from) {
         removeInstructions(Arrays.asList(add), from);
     }

@@ -12,6 +12,9 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        url 'https://stianloader.org/maven'
+    }
 }
 
 dependencies {
@@ -26,6 +29,8 @@ dependencies {
     implementation 'org.ow2.asm:asm-commons:9.7'
     implementation 'org.ow2.asm:asm-tree:9.7'
     implementation 'org.ow2.asm:asm-util:9.7'
+
+    implementation 'org.stianloader:stianloader-remapper:0.1.0-a20240426'
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
