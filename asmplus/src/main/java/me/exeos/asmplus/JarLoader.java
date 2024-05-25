@@ -71,13 +71,13 @@ public class JarLoader {
     /**
      * Export mapped jar back to a jar file
      *
-     * @param inputPath Desired path for jar output
+     * @param outputPath Desired path for jar output
      * @throws IOException
      */
 
-    public void export(String inputPath) throws Exception {
-        new File(new File(inputPath).getParent()).mkdirs();
-        JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(inputPath));
+    public void export(String outputPath) throws Exception {
+        new File(new File(outputPath).getParent()).mkdirs();
+        JarOutputStream jarOut = new JarOutputStream(new FileOutputStream(outputPath));
         for (Map.Entry<String, ClassNode> entry : classes.entrySet()) {
             ClassWriter classWriter = new ClassWriter(ClassWriter.COMPUTE_MAXS);
             entry.getValue().accept(classWriter);
@@ -91,8 +91,16 @@ public class JarLoader {
 
         jarOut.finish();
 
-        BasicFileAttributeView attributeView = Files.getFileAttributeView(Paths.get(inputPath), BasicFileAttributeView.class);
+        BasicFileAttributeView attributeView = Files.getFileAttributeView(Paths.get(outputPath), BasicFileAttributeView.class);
         attributeView.setTimes(lastModifiedTime, null, creationTime);
+    }
+
+    public void putClass(byte[] classBytes) {
+        ClassReader classReader = new ClassReader(classBytes);
+        ClassNode classNode = new ClassNode();
+        classReader.accept(classNode, ClassReader.SKIP_DEBUG);
+
+        classes.put(classNode.name, classNode);
     }
 
     protected void writeJarEntry(JarOutputStream outputStream, String name, byte[] bytes) throws IOException {
