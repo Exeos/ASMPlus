@@ -33,4 +33,12 @@ public class RandomUtil {
         secureRandom.nextBytes(randomBytes);
         return randomBytes;
     }
+
+    public static String getString(int length) {
+        StringBuilder builder = new StringBuilder();
+        for (int i = 0; i < length; i++) {
+            builder.append((char) (getInt(Character.MIN_VALUE, Character.MAX_VALUE)));
+        }
+        return builder.toString();
+    }
 }

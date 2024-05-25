@@ -55,15 +55,10 @@ public class ASMUtils implements Opcodes {
         }
     }
 
-    public static void setOpcode(AbstractInsnNode insnNode, int opcode) throws IllegalAccessException {
-        for (Field field : insnNode.getClass().getFields()) {
-            if (!field.getName().equals("opcode"))
-                continue;
-
-            field.setAccessible(true);
-            field.set(field, opcode);
-            break;
-        }
+    public static void setOpcode(AbstractInsnNode insnNode, int opcode) throws IllegalAccessException, NoSuchFieldException {
+        Field ocField = AbstractInsnNode.class.getDeclaredField("opcode");
+        ocField.setAccessible(true);
+        ocField.set(insnNode, opcode);
     }
     /* ___ END: Actions ___ */
 
@@ -554,10 +549,6 @@ public class ASMUtils implements Opcodes {
      * @return List<AbstractInsnNode></> for jump
      */
     public static Jump getJump(int jumpOpcode, LabelNode to) {
-        if (true) {
-//        if (jumpOpcode >= IF_ICMPGE) {
-            jumpOpcode = GOTO;
-        }
         Jump jump = new Jump();
         switch (jumpOpcode) {
             /* val == 0 */
@@ -679,6 +670,19 @@ public class ASMUtils implements Opcodes {
             insns.add(new InsnNode(POP));
 
         return insns;
+    }
+
+    public static int getOppositeJumpCode(int opcode) {
+        if (opcode < IFEQ || opcode > IF_ACMPNE) {
+            throw new IllegalStateException("Opcode must be between IFEQ and IF_ACMPNE");
+        }
+
+        int inc = 1;
+        if (opcode % 2 == 0) {
+            inc = -1;
+        }
+
+        return opcode + inc;
     }
 
     /* ___ END: get x by / based on y ___ */

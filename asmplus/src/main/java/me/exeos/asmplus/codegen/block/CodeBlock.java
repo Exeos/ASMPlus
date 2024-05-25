@@ -12,8 +12,6 @@ import java.util.List;
 
 public class CodeBlock {
 
-    public String debug;
-
     private LabelNode entry = new LabelNode();
     public final ArrayList<AbstractInsnNode> code = new ArrayList<>();
 
@@ -27,11 +25,6 @@ public class CodeBlock {
 
     public CodeBlock() {
         this(null, null);
-    }
-
-    public CodeBlock(String debug) {
-        this(null, null);
-        this.debug = debug;
     }
 
     public ArrayList<AbstractInsnNode> genBlockCode() {
