@@ -71,10 +71,10 @@ public class PatternScanner implements PatternParts, Opcodes {
      * @return                  The patterns found
      */
     public List<InsnResult> scanMethod(MethodNode methodNode) {
-        if (pattern == null)
-            return null;
-
         List<InsnResult> foundPatterns = new ArrayList<>();
+
+        if (pattern == null || methodNode == null)
+            return foundPatterns;
 
         for (AbstractInsnNode first : methodNode.instructions) {
             AbstractInsnNode last = ASMUtils.getNext(first, pattern.length - 1);

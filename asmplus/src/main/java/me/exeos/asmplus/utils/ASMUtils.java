@@ -730,6 +730,18 @@ public class ASMUtils implements Opcodes {
     }
 
     /**
+     * Remove the given access flags from a MethodNode.
+     *
+     * @param method the method to update
+     * @param toRemove array of access codes (e.g. ACC_PUBLIC, ACC_STATIC)
+     */
+    public static void removeAccessCodes(MethodNode method, int... toRemove) {
+        for (int flag : toRemove) {
+            method.access &= ~flag;
+        }
+    }
+
+    /**
      * Returns if insn is present in method, this can be used to avoid concurrent-modification exceptions or nullpointer exceptions when removing insns
      * @param insnNode insn to check for
      * @param in method that should contai insn
