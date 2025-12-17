@@ -24,10 +24,11 @@ hs_err_pid*
 replay_pid*
 
 # manuel
-/.idea/
+.idea/
 /target/
 /out/
 *.iml
 *.json
 /.gradle/
 /asmplus/build/
+/asmplus-lib/build/
