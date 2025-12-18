@@ -3,4 +3,11 @@ plugins {
 }
 
 rootProject.name = "asmplus"
+
 include("asmplus-lib")
+
+includeBuild(providers.gradleProperty("dependencies.jlib.path")) {
+    dependencySubstitution {
+        substitute(module("me.exeos:jlib")).using(project(":jlib-lib"))
+    }
+}

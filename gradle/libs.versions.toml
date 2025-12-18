@@ -2,6 +2,7 @@
 junit-jupiter = "5.12.1"
 asm = "9.7"
 stianloader = "0.1.0-a20240426"
+jlib = "1.0.0"
 
 [libraries]
 junit-jupiter = { module = "org.junit.jupiter:junit-jupiter", version.ref = "junit-jupiter" }
@@ -11,6 +12,7 @@ asm-commons = { module = "org.ow2.asm:asm-commons", version.ref = "asm" }
 asm-tree = { module = "org.ow2.asm:asm-tree", version.ref = "asm" }
 asm-util = { module = "org.ow2.asm:asm-util", version.ref = "asm" }
 stianloader-remapper = { module = "org.stianloader:stianloader-remapper", version.ref = "stianloader" }
+jlib = { module = "me.exeos:jlib", version.ref = "jlib" }
 
 [bundles]
 asm = ["asm", "asm-analysis", "asm-commons", "asm-tree", "asm-util"]

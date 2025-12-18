@@ -18,6 +18,7 @@ dependencies {
     testRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
     api(libs.bundles.asm)
+    api(libs.jlib)
     implementation(libs.stianloader.remapper)
 }
 
