@@ -4,6 +4,7 @@ import org.objectweb.asm.tree.ClassNode;
 
 import java.util.List;
 
+@Deprecated
 public class ClassResult {
 
     public final ClassNode classNode;

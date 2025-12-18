@@ -2,6 +2,7 @@ package me.exeos.asmplus.pattern.result;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 
+@Deprecated
 public class InsnResult {
 
     public InsnResult(AbstractInsnNode[] pattern) {

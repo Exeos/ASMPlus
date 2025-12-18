@@ -2,6 +2,7 @@ package me.exeos.asmplus.pattern;
 
 import org.objectweb.asm.tree.AbstractInsnNode;
 
+@Deprecated
 public interface PatternParts {
 
     /**

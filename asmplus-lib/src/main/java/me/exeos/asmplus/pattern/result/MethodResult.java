@@ -4,6 +4,7 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.List;
 
+@Deprecated
 public class MethodResult {
 
     public final MethodNode methodNode;
