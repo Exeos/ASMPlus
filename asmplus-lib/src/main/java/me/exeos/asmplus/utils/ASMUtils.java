@@ -10,6 +10,7 @@ import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 public class ASMUtils implements Opcodes {
 
@@ -287,6 +288,41 @@ public class ASMUtils implements Opcodes {
 
     /* ___ START: value by insn ___ */
 
+    public static <T> Optional<T> getValue(AbstractInsnNode insnNode, Class<T> type) {
+        return getValue(insnNode, type, false);
+    }
+
+    public static <T> Optional<T> getValue(AbstractInsnNode insnNode, Class<T> type, boolean strict) {
+        Object value = null;
+        if (isValuePush(insnNode)) {
+            if (isIntPush(insnNode))
+                value = getIntValue(insnNode);
+            if (isBytePush(insnNode))
+                value = getByteValue(insnNode);
+            if (isShortPush(insnNode))
+                value = getShortValue(insnNode);
+            if (isLongPush(insnNode))
+                value = getLongValue(insnNode);
+            if (isFloatPush(insnNode))
+                value = getFloatValue(insnNode);
+            if (isDoublePush(insnNode))
+                value = getDoubleValue(insnNode);
+            if (isString(insnNode))
+                value = getStringValue(insnNode);
+        }
+
+        if (value == null || (strict && !value.getClass().equals(type))) {
+            return Optional.empty();
+        }
+
+        try {
+            return Optional.of(type.cast(value));
+        } catch (ClassCastException ignored) {
+            return Optional.empty();
+        }
+    }
+
+    @Deprecated(forRemoval = true)
     public static Object getValue(AbstractInsnNode insnNode) {
         if (isValuePush(insnNode)) {
             if (isIntPush(insnNode))
@@ -757,7 +793,7 @@ public class ASMUtils implements Opcodes {
         return insnNode instanceof LdcInsnNode || insnNode instanceof TypeInsnNode || isNumberPush(insnNode);
     }
 
-    /* ___STAR: num check start___*/
+    /* ___START: num check start___*/
     public static boolean isNumberPush(AbstractInsnNode insnNode) {
         return isNumConstPush(insnNode.getOpcode()) ||
                 isDoublePush(insnNode) ||

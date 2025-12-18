@@ -12,6 +12,7 @@ import org.objectweb.asm.tree.MethodNode;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 
 @Deprecated
 public class PatternScanner implements PatternParts, Opcodes {
