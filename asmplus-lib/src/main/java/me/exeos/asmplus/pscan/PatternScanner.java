@@ -4,6 +4,7 @@ import me.exeos.asmplus.pscan.match.AbstractInstructionMatcher;
 import me.exeos.asmplus.pscan.match.matchers.InstructionTypeMatcher;
 import me.exeos.asmplus.pscan.match.matchers.NumberMatcher;
 import me.exeos.asmplus.pscan.match.matchers.OpCodeMatcher;
+import me.exeos.asmplus.pscan.match.matchers.StringMatcher;
 import org.objectweb.asm.tree.AbstractInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
@@ -57,12 +58,26 @@ public class PatternScanner {
     }
 
     public PatternScanner matchNumber() {
-        multiMatchers.add(new ArrayList<>(List.of(new NumberMatcher(Optional.empty()))));
+        multiMatchers.add(new ArrayList<>(List.of(new NumberMatcher(Optional.empty(), NumberMatcher.MatchMode.NONE))));
         return this;
     }
 
     public PatternScanner matchNumber(Number number) {
-        multiMatchers.add(new ArrayList<>(List.of(new NumberMatcher(Optional.of(number)))));
+        return matchNumber(number, NumberMatcher.MatchMode.EQUALS);
+    }
+
+    public PatternScanner matchNumber(Number number, NumberMatcher.MatchMode matchMode) {
+        multiMatchers.add(new ArrayList<>(List.of(new NumberMatcher(Optional.of(number), matchMode))));
+        return this;
+    }
+
+    public PatternScanner matchString() {
+        multiMatchers.add(new ArrayList<>(List.of(new StringMatcher(Optional.empty()))));
+        return this;
+    }
+
+    public PatternScanner matchString(String toMatch) {
+        multiMatchers.add(new ArrayList<>(List.of(new StringMatcher(Optional.of(toMatch)))));
         return this;
     }
 
@@ -100,12 +115,26 @@ public class PatternScanner {
         }
 
         public MultiMatchBuilder matchNumber() {
-            matchers.add(new NumberMatcher(Optional.empty()));
+            matchers.add(new NumberMatcher(Optional.empty(), NumberMatcher.MatchMode.NONE));
             return this;
         }
 
         public MultiMatchBuilder matchNumber(Number number) {
-            matchers.add(new NumberMatcher(Optional.of(number)));
+            return matchNumber(number, NumberMatcher.MatchMode.EQUALS);
+        }
+
+        public MultiMatchBuilder matchNumber(Number number, NumberMatcher.MatchMode matchMode) {
+            matchers.add(new NumberMatcher(Optional.of(number), matchMode));
+            return this;
+        }
+
+        public MultiMatchBuilder matchString() {
+            matchers.add(new StringMatcher(Optional.empty()));
+            return this;
+        }
+
+        public MultiMatchBuilder matchString(String toMatch) {
+            matchers.add(new StringMatcher(Optional.of(toMatch)));
             return this;
         }
 

@@ -292,17 +292,17 @@ public class ASMUtils implements Opcodes {
         return getValue(insnNode, type, false);
     }
 
-    public static <T> Optional<T> getValue(AbstractInsnNode insnNode, Class<T> type, boolean strict) {
+    public static <T> Optional<T> getValue(AbstractInsnNode insnNode, Class<T> type, boolean matchType) {
         Object value = null;
         if (isValuePush(insnNode)) {
-            if (isIntPush(insnNode))
-                value = getIntValue(insnNode);
-            if (isBytePush(insnNode))
-                value = getByteValue(insnNode);
-            if (isShortPush(insnNode))
-                value = getShortValue(insnNode);
             if (isLongPush(insnNode))
                 value = getLongValue(insnNode);
+            if (isIntPush(insnNode))
+                value = getIntValue(insnNode);
+            if (isShortPush(insnNode))
+                value = getShortValue(insnNode);
+            if (isBytePush(insnNode))
+                value = getByteValue(insnNode);
             if (isFloatPush(insnNode))
                 value = getFloatValue(insnNode);
             if (isDoublePush(insnNode))
@@ -311,7 +311,7 @@ public class ASMUtils implements Opcodes {
                 value = getStringValue(insnNode);
         }
 
-        if (value == null || (strict && !value.getClass().equals(type))) {
+        if (value == null || (matchType && !value.getClass().equals(type))) {
             return Optional.empty();
         }
 
@@ -378,8 +378,8 @@ public class ASMUtils implements Opcodes {
         if (isIConstPush(insnNode.getOpcode()))
             return (short) (insnNode.getOpcode() - 3);
 
-        if (insnNode.getOpcode() == SIPUSH)
-            return (short) ((IntInsnNode) insnNode).operand;
+        if (insnNode instanceof IntInsnNode intInsn && intInsn.operand >= Short.MIN_VALUE && intInsn.operand <= Short.MAX_VALUE)
+            return (short) intInsn.operand;
 
         throw new IllegalStateException("Instruction doesn't represent short");
     }
