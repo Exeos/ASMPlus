@@ -373,7 +373,7 @@ public class ASMUtils implements Opcodes {
             }
         }
 
-        throw new IllegalStateException("Instruction doesn't represent long");
+        throw new IllegalStateException("Instruction doesn't represent double");
     }
 
     public static float getFloatValue(AbstractInsnNode insnNode) {
@@ -387,7 +387,7 @@ public class ASMUtils implements Opcodes {
             }
         }
 
-        throw new IllegalStateException("Instruction doesn't represent long");
+        throw new IllegalStateException("Instruction doesn't represent float");
     }
 
     public static String getStringValue(AbstractInsnNode insnNode) {
@@ -398,7 +398,7 @@ public class ASMUtils implements Opcodes {
             }
         }
 
-        throw new IllegalStateException("Instruction doesn't represent long");
+        throw new IllegalStateException("Instruction doesn't represent string");
     }
     /* ___ END: value by insn ___*/
 
