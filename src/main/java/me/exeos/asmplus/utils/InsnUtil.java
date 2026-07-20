@@ -36,9 +36,53 @@ public class InsnUtil implements Opcodes {
         return opcode >= ICONST_M1 && opcode <= ICONST_5;
     }
 
+    public static boolean isBytePush(AbstractInsnNode insnNode) {
+        return isIConstPush(insnNode) || insnNode.getOpcode() == BIPUSH;
+    }
+
+    public static boolean isShortPush(AbstractInsnNode insnNode) {
+        return isBytePush(insnNode) || insnNode.getOpcode() == SIPUSH;
+    }
+
     public static boolean isIntPush(AbstractInsnNode insnNode) {
-        return isIConstPush(insnNode) || insnNode.getOpcode() == BIPUSH || insnNode.getOpcode() == SIPUSH ||
+        return isShortPush(insnNode) ||
                 (insnNode instanceof LdcInsnNode ldcInsnNode && ldcInsnNode.cst instanceof Integer);
+    }
+
+    public static boolean isLongPush(AbstractInsnNode insnNode) {
+        return insnNode instanceof LdcInsnNode ldc && ldc.cst instanceof Long;
+    }
+
+    public static boolean isDoublePush(AbstractInsnNode insnNode) {
+        return insnNode instanceof LdcInsnNode ldc && ldc.cst instanceof Double;
+    }
+
+    public static boolean isFloatPush(AbstractInsnNode insnNode) {
+        return insnNode instanceof LdcInsnNode ldc && ldc.cst instanceof Float;
+    }
+
+    public static Optional<Long> getLongValue(AbstractInsnNode insnNode) {
+        if (isLongPush(insnNode)) {
+            return Optional.of((Long) ((LdcInsnNode) insnNode).cst);
+        }
+
+        return Optional.empty();
+    }
+
+    public static Optional<Double> getDoubleValue(AbstractInsnNode insnNode) {
+        if (isDoublePush(insnNode)) {
+            return Optional.of((Double) ((LdcInsnNode) insnNode).cst);
+        }
+
+        return Optional.empty();
+    }
+
+    public static Optional<Float> getFloatValue(AbstractInsnNode insnNode) {
+        if (isFloatPush(insnNode)) {
+            return Optional.of((Float) ((LdcInsnNode) insnNode).cst);
+        }
+
+        return Optional.empty();
     }
 
     public static Optional<Integer> getIntValue(AbstractInsnNode insnNode) {
@@ -56,6 +100,30 @@ public class InsnUtil implements Opcodes {
                     return Optional.of(value);
                 }
             }
+        }
+
+        return Optional.empty();
+    }
+
+    public static Optional<Number> getNumberValue(AbstractInsnNode insnNode) {
+        Optional<Integer> intVal = getIntValue(insnNode);
+        if (intVal.isPresent()) {
+            return Optional.of(intVal.get());
+        }
+
+        Optional<Long> longVal = getLongValue(insnNode);
+        if (longVal.isPresent()) {
+            return Optional.of(longVal.get());
+        }
+
+        Optional<Double> doubleVal = getDoubleValue(insnNode);
+        if (doubleVal.isPresent()) {
+            return Optional.of(doubleVal.get());
+        }
+
+        Optional<Float> floatVal = getFloatValue(insnNode);
+        if (floatVal.isPresent()) {
+            return Optional.of(floatVal.get());
         }
 
         return Optional.empty();
@@ -148,5 +216,13 @@ public class InsnUtil implements Opcodes {
             case Opcodes.LLOAD, Opcodes.LSTORE, Opcodes.DLOAD, Opcodes.DSTORE -> true;
             default -> false;
         };
+    }
+
+    public static Optional<String> getStingPushValue(AbstractInsnNode insnNode) {
+        if (insnNode instanceof LdcInsnNode ldc && ldc.cst instanceof String s) {
+            return Optional.of(s);
+        }
+
+        return Optional.empty();
     }
 }
