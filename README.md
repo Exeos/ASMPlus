@@ -7,6 +7,7 @@ A library for working with [ObjectWeb ASM](https://asm.ow2.io/).
 - Utils for Jar, Classes, Hierarchy, Methods, Instructions and more
 - Code generation
 - Remapping
+- PatternScanner
 - Hierarchy analysis
 - Initialization order analysis
 - Control Flow analysis
