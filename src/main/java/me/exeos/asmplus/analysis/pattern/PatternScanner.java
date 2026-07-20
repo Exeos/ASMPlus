@@ -1,11 +1,9 @@
 package me.exeos.asmplus.analysis.pattern;
 
 import me.exeos.asmplus.analysis.pattern.match.AbstractInstructionMatcher;
-import me.exeos.asmplus.analysis.pattern.match.matchers.InstructionTypeMatcher;
-import me.exeos.asmplus.analysis.pattern.match.matchers.NumberMatcher;
-import me.exeos.asmplus.analysis.pattern.match.matchers.OpCodeMatcher;
-import me.exeos.asmplus.analysis.pattern.match.matchers.StringMatcher;
+import me.exeos.asmplus.analysis.pattern.match.matchers.*;
 import org.objectweb.asm.tree.AbstractInsnNode;
+import org.objectweb.asm.tree.InsnList;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.ArrayList;
@@ -18,9 +16,13 @@ public class PatternScanner {
     private final ArrayList<ArrayList<AbstractInstructionMatcher>> multiMatchers = new ArrayList<>();
 
     public ArrayList<AbstractInsnNode> scan(MethodNode methodNode) {
+        return scan(methodNode.instructions);
+    }
+
+    public ArrayList<AbstractInsnNode> scan(InsnList insnList) {
         ArrayList<AbstractInsnNode> matches = new ArrayList<>();
 
-        for (AbstractInsnNode scanStartInsn : methodNode.instructions) {
+        for (AbstractInsnNode scanStartInsn : insnList) {
             boolean match = true;
             AbstractInsnNode currentInsn = scanStartInsn;
             matchAtInstruction:
@@ -54,6 +56,20 @@ public class PatternScanner {
 
     public PatternScanner matchOpCode(int opcode) {
         multiMatchers.add(new ArrayList<>(List.of(new OpCodeMatcher(opcode))));
+        return this;
+    }
+
+    public PatternScanner matchInt() {
+        multiMatchers.add(new ArrayList<>(List.of(new IntMatcher(Optional.empty(), NumberMatcher.MatchMode.NONE))));
+        return this;
+    }
+
+    public PatternScanner matchInt(int value) {
+        return matchInt(value, NumberMatcher.MatchMode.EQUALS);
+    }
+
+    public PatternScanner matchInt(int value, NumberMatcher.MatchMode matchMode) {
+        multiMatchers.add(new ArrayList<>(List.of(new IntMatcher(Optional.of(value), matchMode))));
         return this;
     }
 
@@ -111,6 +127,21 @@ public class PatternScanner {
 
         public MultiMatchBuilder matchOpCode(int opcode) {
             matchers.add(new OpCodeMatcher(opcode));
+            return this;
+        }
+
+        public MultiMatchBuilder matchInt() {
+            matchers.add(new IntMatcher(Optional.empty(), NumberMatcher.MatchMode.NONE));
+            return this;
+        }
+
+        public MultiMatchBuilder matchInt(int value) {
+            return matchInt(value, NumberMatcher.MatchMode.EQUALS);
+        }
+
+        public MultiMatchBuilder matchInt(int value, NumberMatcher.MatchMode matchMode) {
+            matchers.add(new IntMatcher(Optional.of(value), matchMode));
+
             return this;
         }
 

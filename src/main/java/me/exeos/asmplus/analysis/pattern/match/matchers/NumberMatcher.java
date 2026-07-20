@@ -20,18 +20,18 @@ public record NumberMatcher(Optional<Number> value, MatchMode matchMode) impleme
             return numVal.filter(number -> NumberComparator.compareNumbers(number, value.get()) == matchMode.value).isPresent();
         }
 
-        return false;
+        return true;
     }
 
     public enum MatchMode {
-        LESS((byte) -1),
-        EQUALS((byte) 0),
-        GREATER((byte) 1),
-        NONE((byte) 2);
+        LESS(-1),
+        EQUALS(0),
+        GREATER(1),
+        NONE(2);
 
-        public final byte value;
+        public final int value;
 
-        MatchMode(byte value) {
+        MatchMode(int value) {
             this.value = value;
         }
     }

@@ -38,6 +38,10 @@ public class NumberComparator {
         return bdA.compareTo(bdB);
     }
 
+    public static int compareInt(int a, int b) {
+        return BigInteger.valueOf(a).compareTo(BigInteger.valueOf(b));
+    }
+
     private static boolean isIntegralNumber(Number n) {
         return (n instanceof Byte) ||
                 (n instanceof Short) ||
