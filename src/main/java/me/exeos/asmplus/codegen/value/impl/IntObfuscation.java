@@ -14,7 +14,7 @@ public class IntObfuscation implements Opcodes {
 
     @SafeVarargs
     public static InsnList getIntPush(int value, ValueSource<Integer>... valueSources) {
-        return RandomUtil.chance(70)
+        return RandomUtil.chance(80)
                 ? IntObfuscation.xorIntPush(value, valueSources)
                 : IntObfuscation.rotateIntPush(value, valueSources);
     }
@@ -80,7 +80,7 @@ public class IntObfuscation implements Opcodes {
             pushInsn.add(ConstantPusher.getIntPush(31));
             pushInsn.add(new InsnNode(IAND));
 
-            if (RandomUtil.chance(50)) {
+            if (RandomUtil.chance(80)) {
                 pushInsn.add(new MethodInsnNode(INVOKESTATIC, "java/lang/Integer", direction ? "rotateRight" : "rotateLeft", "(II)I"));
             } else {
                 pushInsn.add(direction ? Arithmetic.rotateRight() : Arithmetic.rotateLeft());
