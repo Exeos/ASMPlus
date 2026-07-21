@@ -77,7 +77,7 @@ public class JarLoader {
         for (Map.Entry<String, ClassNode> entry : jar.getClasses().entrySet()) {
             int flags = ClassWriter.COMPUTE_MAXS;
             if (computeFrames) {
-//                flags = flags | ClassWriter.COMPUTE_FRAMES;
+                flags = flags | ClassWriter.COMPUTE_FRAMES;
             }
 
             ClassWriter classWriter = new ClassWriter(flags);
