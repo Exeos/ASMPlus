@@ -27,14 +27,27 @@ public class FlowAnalyzer {
      * Map method instructions to List of BasicBlock.
      *
      * @param methodNode The method to be analyzed
+     * @param detachBlocks Should block instructions be detached from the methodNode's InsnList
      * @return List of BasicBlock
      */
     public static List<BasicBlock> getBasicBlocks(MethodNode methodNode, boolean detachBlocks) {
+        return getBasicBlocks(methodNode, detachBlocks, false);
+    }
+
+    /**
+     * Map method instructions to List of BasicBlock.
+     *
+     * @param methodNode The method to be analyzed
+     * @param detachBlocks Should block instructions be detached from the methodNode's InsnList
+     * @param ignoreUnmappedExceptions Indicates if unmapped exception handlers should be treated as an error
+     * @return List of BasicBlock
+     */
+    public static List<BasicBlock> getBasicBlocks(MethodNode methodNode, boolean detachBlocks, boolean ignoreUnmappedExceptions) {
         List<BasicBlock> blocks = new ArrayList<>();
         Map<AbstractInsnNode, BasicBlock> insnBlockMap = new HashMap<>();
 
         constructBlocks(methodNode, blocks, insnBlockMap);
-        linkBlocks(methodNode, blocks, insnBlockMap);
+        linkBlocks(methodNode, blocks, insnBlockMap, ignoreUnmappedExceptions);
 
         if (detachBlocks) {
             detachBasicBlocks(blocks, methodNode.instructions);
@@ -213,8 +226,9 @@ public class FlowAnalyzer {
      * @param methodNode Method node being analyzed, required for exception flow linking
      * @param blocks     List of blocks to be linked
      * @param blockMap   Map, mapping instructions where blocks start to Block
+     * @param ignoreUnmappedExceptions Indicates if unmapped exception handlers should be treated as an error
      */
-    private static void linkBlocks(MethodNode methodNode, List<BasicBlock> blocks, Map<AbstractInsnNode, BasicBlock> blockMap) {
+    private static void linkBlocks(MethodNode methodNode, List<BasicBlock> blocks, Map<AbstractInsnNode, BasicBlock> blockMap, boolean ignoreUnmappedExceptions) {
         for (BasicBlock block : blocks) {
             AbstractInsnNode last = block.instructions.getLast();
             switch (block) {
@@ -312,6 +326,11 @@ public class FlowAnalyzer {
                 case FallTroughBlock fallTroughBlock -> {
                     if (last.getNext() != null) {
                         BasicBlock ftBlock = blockMap.get(last.getNext());
+                        if (ftBlock == null) {
+                            throw new IllegalStateException(
+                                    "Block mapping incomplete. No block mapped for fall-through next instruction: " + last.getNext()
+                            );
+                        }
 
                         block.successors.add(ftBlock);
                         block.normalSuccessors.add(ftBlock);
@@ -333,6 +352,13 @@ public class FlowAnalyzer {
             for (Map.Entry<AbstractInsnNode, ArrayList<TryCatchBlockNode>> entry : mapExceptionDispatchersToHandlers(methodNode, block).entrySet()) {
                 for (TryCatchBlockNode tryCatchBlockNode : entry.getValue()) {
                     BasicBlock handlerBlock = blockMap.get(tryCatchBlockNode.handler);
+                    if (handlerBlock == null) {
+                        if (ignoreUnmappedExceptions) {
+                            continue;
+                        }
+
+                        throw new IllegalStateException("No handler block mapped for try-catch handler label");
+                    }
 
                     block.successors.add(handlerBlock);
                     block.exceptionDispatchMap
@@ -365,19 +391,6 @@ public class FlowAnalyzer {
                 int endIndex = methodNode.instructions.indexOf(tryCatchBlock.end);
                 if (insnIndex >= startIndex && insnIndex < endIndex) {
                     dispatcherHandlerMap.computeIfAbsent(insnNode, k -> new ArrayList<>()).add(tryCatchBlock);
-                }
-            }
-        }
-
-        // athrow dispatcher
-        AbstractInsnNode last = block.instructions.getLast();
-        if (last.getOpcode() == Opcodes.ATHROW) {
-            int insnIndex = methodNode.instructions.indexOf(last);
-            for (TryCatchBlockNode tryCatchBlock : methodNode.tryCatchBlocks) {
-                int startIndex = methodNode.instructions.indexOf(tryCatchBlock.start);
-                int endIndex = methodNode.instructions.indexOf(tryCatchBlock.end);
-                if (insnIndex >= startIndex && insnIndex < endIndex) {
-                    dispatcherHandlerMap.computeIfAbsent(last, k -> new ArrayList<>()).add(tryCatchBlock);
                 }
             }
         }
