@@ -61,6 +61,7 @@ public class ClassEdge {
 
     /**
      * Check if this Class or any of its parents have unresolved parents
+     *
      * @return true if this Class or any of its parents have unresolved parents
      */
     public boolean hasUnresolved() {
@@ -133,11 +134,33 @@ public class ClassEdge {
     }
 
     /**
+     * Finds the nearest field with the given name in this class hierarchy.
+     *
+     * @param name The field name
+     * @return The nearest matching field, if one exists
+     */
+    public Optional<FieldEdge> findNearestField(String name) {
+        Optional<FieldEdge> firstLevel = getField(name);
+        if (firstLevel.isPresent()) {
+            return firstLevel;
+        }
+
+        for (ClassEdge parent : parents) {
+            Optional<FieldEdge> parentLevel = parent.findNearestField(name);
+            if (parentLevel.isPresent()) {
+                return parentLevel;
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    /**
      * Discovers the method matching the given name and descriptor on this class or its
      * overridden ancestor methods, and passes each matched edge to the provided consumer.
      *
-     * @param name The method name
-     * @param desc The method descriptor
+     * @param name     The method name
+     * @param desc     The method descriptor
      * @param consumer Callback invoked for each discovered method edge
      */
     public void discoverMethods(String name, String desc, Consumer<MethodEdge> consumer) {
@@ -181,6 +204,7 @@ public class ClassEdge {
 
     /**
      * Finds the class that is declaring the method root.
+     *
      * @param methodNode The method node to match
      * @return The class declaring the method root, if found
      */
@@ -190,6 +214,7 @@ public class ClassEdge {
 
     /**
      * Finds the class that is declaring the method root.
+     *
      * @param name The method name
      * @param desc The method descriptor
      * @return The class declaring the method root, if found
@@ -270,6 +295,22 @@ public class ClassEdge {
     public Optional<FieldEdge> getField(String name, String desc) {
         for (FieldEdge fieldEdge : fields) {
             if (fieldEdge.fieldNode().name.equals(name) && fieldEdge.fieldNode().desc.equals(desc)) {
+                return Optional.of(fieldEdge);
+            }
+        }
+
+        return Optional.empty();
+    }
+
+    /**
+     * Returns a field declared directly in this class, if one matches the given name.
+     *
+     * @param name The field name
+     * @return The matching field, if one exists
+     */
+    public Optional<FieldEdge> getField(String name) {
+        for (FieldEdge fieldEdge : fields) {
+            if (fieldEdge.fieldNode().name.equals(name)) {
                 return Optional.of(fieldEdge);
             }
         }

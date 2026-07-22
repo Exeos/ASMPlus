@@ -11,12 +11,16 @@ import java.util.function.Function;
 public class HierarchyUtil {
 
     public static String genNoneCollidingFieldName(ClassEdge owner, String fieldDesc, Function<Integer, String> nameGen) {
+        return genNoneCollidingFieldName(owner, fieldDesc, nameGen, true);
+    }
+
+    public static String genNoneCollidingFieldName(ClassEdge owner, String fieldDesc, Function<Integer, String> nameGen, boolean descAware) {
         String name;
         int tryCount = 1;
         do {
             name = nameGen.apply(tryCount);
             tryCount++;
-        } while (owner.findNearestField(name, fieldDesc).isPresent());
+        } while ((descAware ? owner.findNearestField(name, fieldDesc).isPresent() : owner.findNearestField(name).isPresent()));
 
         return name;
     }

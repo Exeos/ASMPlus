@@ -18,6 +18,12 @@ public class ClassMapper {
 
         for (ClassNode classNode : jar.getClasses().values()) {
             if (shouldExclude.apply(classNode)) {
+                usedNames.add(classNode.name);
+            }
+        }
+
+        for (ClassNode classNode : jar.getClasses().values()) {
+            if (shouldExclude.apply(classNode)) {
                 continue;
             }
 

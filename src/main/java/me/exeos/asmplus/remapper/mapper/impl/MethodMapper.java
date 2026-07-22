@@ -7,6 +7,7 @@ import me.exeos.asmplus.remapper.mapper.MappingContext;
 import me.exeos.asmplus.utils.MapperUtil;
 import me.exeos.asmplus.utils.MethodUtil;
 import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.*;
@@ -26,7 +27,7 @@ public class MethodMapper {
         Map<ClassEdge, Set<String>> usedNamesByClass = new HashMap<>();
 
         for (ClassNode classNode : jar.getClasses().values()) {
-            if (!hierarchy.containsKey(classNode.name) || !hierarchy.get(classNode.name).unresolvedParents.isEmpty() || shouldExclude.apply(new MappingContext(classNode, Optional.empty()))) {
+            if (!hierarchy.containsKey(classNode.name) || !hierarchy.get(classNode.name).unresolvedParents.isEmpty() || shouldExclude.apply(new MappingContext(classNode, Optional.empty(), Optional.empty()))) {
                 continue;
             }
 
@@ -50,7 +51,13 @@ public class MethodMapper {
 
             Set<String> usedNames = MapperUtil.mergeUsedFromHierarchy(hierarchy.get(classNode.name), usedNamesByClass);
             for (MethodNode methodNode : classNode.methods) {
-                if (hierarchyExcludedMethods.contains(methodNode.name + methodNode.desc) || MethodUtil.isSpecial(methodNode) || shouldExclude.apply(new MappingContext(classNode, Optional.of(methodNode)))) {
+                if (shouldExclude.apply(new MappingContext(classNode, Optional.empty(), Optional.of(methodNode)))) {
+                    usedNames.add(methodNode.name);
+                }
+            }
+
+            for (MethodNode methodNode : classNode.methods) {
+                if (hierarchyExcludedMethods.contains(methodNode.name + methodNode.desc) || MethodUtil.isSpecial(methodNode) || shouldExclude.apply(new MappingContext(classNode, Optional.empty(), Optional.of(methodNode)))) {
                     continue;
                 }
 
