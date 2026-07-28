@@ -60,9 +60,18 @@ public class ClassRemapper {
     private void remapClassNode(ClassNode classNode) {
         classNode.name = getMapped(classNode.name);
         classNode.superName = getMapped(classNode.superName);
+        classNode.outerClass = getMapped(classNode.outerClass);
+        classNode.nestHostClass = getMapped(classNode.nestHostClass);
         classNode.interfaces.replaceAll(this::getMapped);
+        if (classNode.nestMembers != null) {
+            classNode.nestMembers.replaceAll(this::getMapped);
+        }
+        if (classNode.permittedSubclasses != null) {
+            classNode.permittedSubclasses.replaceAll(this::getMapped);
+        }
         classNode.signature = null;
 
+        remapInnerClasses(classNode.innerClasses);
         remapAnnotationList(classNode.visibleAnnotations);
         remapAnnotationList(classNode.invisibleAnnotations);
         remapTypeAnnotationList(classNode.visibleTypeAnnotations);
@@ -79,6 +88,15 @@ public class ClassRemapper {
         }
 
         archive.setClasses(newMap);
+    }
+
+    private void remapInnerClasses(List<InnerClassNode> innerClasses) {
+        for (InnerClassNode innerClassNode : innerClasses) {
+            innerClassNode.name = getMapped(innerClassNode.name);
+            innerClassNode.outerName = getMapped(innerClassNode.outerName);
+            String innerNameMapped = getMapped(innerClassNode.innerName.replace(".", "/"));
+            innerClassNode.innerName = innerNameMapped.substring(Math.max(0, innerNameMapped.lastIndexOf("/")));
+        }
     }
 
     private void remapAnnotationList(List<AnnotationNode> annotations) {
@@ -117,7 +135,7 @@ public class ClassRemapper {
                         switch (indy.bsmArgs[i]) {
                             case Handle handle -> indy.bsmArgs[i] = remapHandle(handle);
                             case Type type -> indy.bsmArgs[i] = remapType(type);
-                            default -> System.out.println("Ignored BSM-Arg");
+                            default -> System.out.println("Ignored BSM-Arg: " + indy.bsmArgs[i].getClass().getSimpleName());
                         }
                     }
                 }

@@ -7,7 +7,6 @@ import org.objectweb.asm.tree.MethodNode;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicReference;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
 
@@ -20,32 +19,29 @@ import java.util.stream.Collectors;
  */
 public class ClassEdge {
 
+    public final List<ClassEdge> interfaces = new ArrayList<>();
     public final ClassNode classNode;
-
     /**
      * A set of all the parents not found in the jar archive or provided dependencies
      */
     public final Set<String> unresolvedParents = new HashSet<>();
-
     /**
      * Direct parent classes and interfaces in the hierarchy.
      */
     public final List<ClassEdge> parents = new ArrayList<>();
-
     /**
      * Direct child classes and interfaces in the hierarchy.
      */
     public final List<ClassEdge> children = new ArrayList<>();
-
     /**
      * Fields declared directly on this class.
      */
     public final List<FieldEdge> fields = new ArrayList<>();
-
     /**
      * Methods declared directly on this class.
      */
     public final List<MethodEdge> methods = new ArrayList<>();
+    public ClassEdge superClass;
 
     public ClassEdge(ClassNode classNode) {
         this.classNode = classNode;
@@ -123,10 +119,18 @@ public class ClassEdge {
             return firstLevel;
         }
 
-        for (ClassEdge parent : parents) {
-            Optional<FieldEdge> parentLevel = parent.findNearestField(name, desc);
-            if (parentLevel.isPresent()) {
-                return parentLevel;
+        for (ClassEdge interfaceEdge : interfaces) {
+            Optional<FieldEdge> viaInterface = interfaceEdge.findNearestField(name, desc);
+
+            if (viaInterface.isPresent()) {
+                return viaInterface;
+            }
+        }
+
+        if (superClass != null) {
+            Optional<FieldEdge> viaSuper = superClass.findNearestField(name, desc);
+            if (viaSuper.isPresent()) {
+                return viaSuper;
             }
         }
 
@@ -145,10 +149,17 @@ public class ClassEdge {
             return firstLevel;
         }
 
-        for (ClassEdge parent : parents) {
-            Optional<FieldEdge> parentLevel = parent.findNearestField(name);
-            if (parentLevel.isPresent()) {
-                return parentLevel;
+        for (ClassEdge interfaceEdge : interfaces) {
+            Optional<FieldEdge> viaInterface = interfaceEdge.findNearestField(name);
+            if (viaInterface.isPresent()) {
+                return viaInterface;
+            }
+        }
+
+        if (superClass != null) {
+            Optional<FieldEdge> viaSuper = superClass.findNearestField(name);
+            if (viaSuper.isPresent()) {
+                return viaSuper;
             }
         }
 
@@ -208,8 +219,8 @@ public class ClassEdge {
      * @param methodNode The method node to match
      * @return The class declaring the method root, if found
      */
-    public Optional<MethodEdge> findMethodRoot(MethodNode methodNode) {
-        return findMethodRoot(methodNode.name, methodNode.desc);
+    public Set<MethodEdge> findTopDeclarations(MethodNode methodNode) {
+        return findTopDeclarations(methodNode.name, methodNode.desc);
     }
 
     /**
@@ -219,14 +230,11 @@ public class ClassEdge {
      * @param desc The method descriptor
      * @return The class declaring the method root, if found
      */
-    public Optional<MethodEdge> findMethodRoot(String name, String desc) {
-        AtomicReference<Optional<MethodEdge>> root = new AtomicReference<>(Optional.empty());
+    public Set<MethodEdge> findTopDeclarations(String name, String desc) {
+        Set<MethodEdge> topDeclarations = new HashSet<>();
+        findNearestMethod(name, desc).ifPresent(nearest -> topDeclarations.addAll(nearest.findTopDeclarations()));
 
-        findNearestMethod(name, desc).ifPresent(nearest -> {
-            root.set(Optional.of(nearest.getRoot()));
-        });
-
-        return root.get();
+        return topDeclarations;
     }
 
     public Set<MethodEdge> findMethods(String name) {
@@ -265,10 +273,17 @@ public class ClassEdge {
             return firstLevel;
         }
 
-        for (ClassEdge parent : parents) {
-            Optional<MethodEdge> parentLevel = parent.findNearestMethod(name, desc);
-            if (parentLevel.isPresent()) {
-                return parentLevel;
+        if (superClass != null) {
+            Optional<MethodEdge> viaSuper = superClass.findNearestMethod(name, desc);
+            if (viaSuper.isPresent()) {
+                return viaSuper;
+            }
+        }
+
+        for (ClassEdge interfaceEdge : interfaces) {
+            Optional<MethodEdge> viaInterface = interfaceEdge.findNearestMethod(name, desc);
+            if (viaInterface.isPresent()) {
+                return viaInterface;
             }
         }
 
@@ -318,17 +333,22 @@ public class ClassEdge {
         return Optional.empty();
     }
 
-    public Optional<MethodEdge> getMethodRoot(MethodNode methodNode) {
-        return getMethodRoot(methodNode.name, methodNode.desc);
+    public Set<MethodEdge> getOverrideGroup(MethodNode methodNode) {
+        Set<MethodEdge> overrideGroup = new HashSet<>();
+        getMethod(methodNode).ifPresent(methodEdge -> overrideGroup.addAll(methodEdge.getOverrideGroup()));
+
+        return overrideGroup;
     }
 
-    public Optional<MethodEdge> getMethodRoot(String name, String desc) {
-        AtomicReference<Optional<MethodEdge>> root = new AtomicReference<>(Optional.empty());
-        getMethod(name, desc).ifPresent(methodEdge -> {
-            root.set(Optional.of(methodEdge.getRoot()));
-        });
+    public Set<MethodEdge> getTopDeclarations(MethodNode methodNode) {
+        return getTopDeclarations(methodNode.name, methodNode.desc);
+    }
 
-        return root.get();
+    public Set<MethodEdge> getTopDeclarations(String name, String desc) {
+        Set<MethodEdge> topDeclarations = new HashSet<>();
+        getMethod(name, desc).ifPresent(methodEdge -> topDeclarations.addAll(methodEdge.findTopDeclarations()));
+
+        return topDeclarations;
     }
 
     /**

@@ -2,7 +2,6 @@ package me.exeos.asmplus.remapper;
 
 import me.exeos.asmplus.analysis.hierarchy.HierarchyAnalyzer;
 import me.exeos.asmplus.analysis.hierarchy.edge.ClassEdge;
-import me.exeos.asmplus.analysis.hierarchy.edge.MethodEdge;
 import me.exeos.asmplus.descriptor.DescriptorMember;
 import me.exeos.asmplus.descriptor.DescriptorParser;
 import me.exeos.asmplus.jar.JarArchive;
@@ -11,7 +10,6 @@ import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
 
 import java.util.Map;
-import java.util.Optional;
 
 public class MethodRemapper {
 
@@ -54,7 +52,8 @@ public class MethodRemapper {
                             }
                         }
                     }
-                    default -> {}
+                    default -> {
+                    }
                 }
             }
         }
@@ -71,8 +70,8 @@ public class MethodRemapper {
             return owner;
         }
 
-        Optional<MethodEdge> rootMethod = hierarchy.get(owner).findMethodRoot(name, desc);
-        return rootMethod.isPresent() ? rootMethod.get().owner().classNode.name : owner;
+        // should prolly not matter because method mapper merges override group names
+        return hierarchy.get(owner).findTopDeclarations(name, desc).iterator().next().owner().classNode.name;
     }
 
     private Handle remapHandle(Handle handle) {

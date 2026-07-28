@@ -1,6 +1,7 @@
 package me.exeos.asmplus.utils;
 
 import me.exeos.asmplus.analysis.hierarchy.edge.ClassEdge;
+import me.exeos.asmplus.analysis.hierarchy.edge.MethodEdge;
 import me.exeos.asmplus.matcher.method.MethodMatchEntry;
 import me.exeos.asmplus.matcher.method.MethodMatcher;
 
@@ -46,12 +47,10 @@ public class HierarchyUtil {
                 continue;
             }
 
-            hierarchy.get(wrapper.owner()).findMethodRoot(wrapper.name(), wrapper.desc()).ifPresent(rootMethod -> {
-                matcher.add(MethodMatchEntry.of(rootMethod));
-                rootMethod.getOverriders().forEach(overrider -> {
-                    matcher.add(MethodMatchEntry.of(overrider));
-                });
-            });
+            for (MethodEdge declaringEdge : hierarchy.get(wrapper.owner()).findTopDeclarations(wrapper.name(), wrapper.desc())) {
+                matcher.add(MethodMatchEntry.of(declaringEdge));
+                declaringEdge.getOverriders().forEach(overrider -> matcher.add(MethodMatchEntry.of(overrider)));
+            }
         }
     }
 }

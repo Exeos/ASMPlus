@@ -4,7 +4,9 @@ import me.exeos.asmplus.analysis.hierarchy.edge.ClassEdge;
 import me.exeos.asmplus.jar.JarArchive;
 import org.objectweb.asm.tree.ClassNode;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Consumer;
 
 public class HierarchyAnalyzer {
@@ -22,18 +24,27 @@ public class HierarchyAnalyzer {
         Map<ClassNode, ClassEdge> edgeMap = new HashMap<>();
 
         for (ClassNode classNode : jar.getClassesAndDependencies().values()) {
-            edgeMap.putIfAbsent(classNode, new ClassEdge(classNode));
+            ClassEdge edge = edgeMap.computeIfAbsent(classNode, ClassEdge::new);
 
-            Set<String> directParents = new HashSet<>(classNode.interfaces);
             if (classNode.superName != null) {
-                directParents.add(classNode.superName);
+                jar.getClassNode(classNode.superName).ifPresentOrElse(superClass -> {
+                    ClassEdge superEdge = edgeMap.computeIfAbsent(superClass, ClassEdge::new);
+
+                    edge.superClass = superEdge;
+                    edge.parents.add(superEdge);
+                }, () -> {
+                    edge.unresolvedParents.add(classNode.superName);
+                });
             }
 
-            for (String parentName : directParents) {
-                jar.getClassNode(parentName).ifPresentOrElse(parentClass -> {
-                    edgeMap.get(classNode).parents.add(edgeMap.computeIfAbsent(parentClass, ClassEdge::new));
+            for (String interfaceName : classNode.interfaces) {
+                jar.getClassNode(interfaceName).ifPresentOrElse(interfaceClass -> {
+                    ClassEdge interfaceEdge = edgeMap.computeIfAbsent(interfaceClass, ClassEdge::new);
+
+                    edge.parents.add(interfaceEdge);
+                    edge.interfaces.add(interfaceEdge);
                 }, () -> {
-                    edgeMap.get(classNode).unresolvedParents.add(parentName);
+                    edge.unresolvedParents.add(interfaceName);
                 });
             }
         }
@@ -45,6 +56,13 @@ public class HierarchyAnalyzer {
         }
 
         return edgeMap;
+    }
+
+    public static void recurseInterfaces(List<ClassEdge> edges, Consumer<ClassEdge> edgeConsumer) {
+        for (ClassEdge edge : edges) {
+            edgeConsumer.accept(edge);
+            recurseParents(edge.interfaces, edgeConsumer);
+        }
     }
 
     public static void recurseParents(List<ClassEdge> edges, Consumer<ClassEdge> edgeConsumer) {

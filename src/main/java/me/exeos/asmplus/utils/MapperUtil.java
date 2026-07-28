@@ -2,6 +2,7 @@ package me.exeos.asmplus.utils;
 
 import me.exeos.asmplus.analysis.hierarchy.HierarchyAnalyzer;
 import me.exeos.asmplus.analysis.hierarchy.edge.ClassEdge;
+import me.exeos.asmplus.analysis.hierarchy.edge.MethodEdge;
 import me.exeos.asmplus.jar.JarArchive;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
@@ -34,15 +35,22 @@ public class MapperUtil {
             }
 
             for (MethodNode methodNode : classNode.methods) {
-                hierarchy.get(classNode.name).getMethodRoot(methodNode).ifPresent(root -> {
-                    String rootKey = root.owner().classNode.name + root.methodNode().name + root.methodNode().desc;
-                    if (mapping.containsKey(rootKey)) {
-                        mapping.put(
-                                classNode.name + methodNode.name + methodNode.desc,
-                                mapping.get(rootKey)
-                        );
+                Set<MethodEdge> overrideGroup = hierarchy.get(classNode.name).getOverrideGroup(methodNode);
+                if (overrideGroup.isEmpty()) {
+                    continue;
+                }
+
+                MethodEdge first = overrideGroup.iterator().next();
+                String firstMapped = mapping.get(first.getOwnerName() + first.getName() + first.getDesc());
+
+                for (MethodEdge overrideEdge : overrideGroup) {
+                    String edgeMethodId = overrideEdge.getOwnerName() + overrideEdge.getName() + overrideEdge.getDesc();
+                    if (firstMapped == null) {
+                        mapping.put(edgeMethodId, overrideEdge.getName());
+                    } else {
+                        mapping.put(edgeMethodId, firstMapped);
                     }
-                });
+                }
             }
         }
     }
