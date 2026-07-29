@@ -7,6 +7,7 @@ import me.exeos.asmplus.jar.JarArchive;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
@@ -16,7 +17,7 @@ public class MapperUtil {
 
     public static String genName(Function<Integer, String> nameGen, Set<String> excluded) {
         String name;
-        int tries = 1;
+        int tries = 0;
         do {
             name = nameGen.apply(tries++);
         } while (excluded.contains(name));
@@ -55,21 +56,27 @@ public class MapperUtil {
         }
     }
 
-    public static Set<String> mergeUsedFromHierarchy(ClassEdge edge, Map<ClassEdge, Set<String>> usedByEdge) {
-        Set<String> merged = new HashSet<>();
+    public static Map<String, Set<String>> mergeUsedFromHierarchy(ClassEdge edge, Map<ClassEdge, Map<String, Set<String>>> usedByEdge) {
+        Map<String, Set<String>> merged = new HashMap<>();
         if (usedByEdge.containsKey(edge)) {
-            merged.addAll(usedByEdge.get(edge));
+            for (Map.Entry<String, Set<String>> entry : usedByEdge.get(edge).entrySet()) {
+                merged.computeIfAbsent(entry.getKey(), _ -> new HashSet<>()).addAll(entry.getValue());
+            }
         }
 
         HierarchyAnalyzer.recurseParents(edge.parents, parent -> {
             if (usedByEdge.containsKey(parent)) {
-                merged.addAll(usedByEdge.get(parent));
+                for (Map.Entry<String, Set<String>> entry : usedByEdge.get(parent).entrySet()) {
+                    merged.computeIfAbsent(entry.getKey(), _ -> new HashSet<>()).addAll(entry.getValue());
+                }
             }
         });
 
         HierarchyAnalyzer.recurseChildren(edge.children, child -> {
             if (usedByEdge.containsKey(child)) {
-                merged.addAll(usedByEdge.get(child));
+                for (Map.Entry<String, Set<String>> entry : usedByEdge.get(child).entrySet()) {
+                    merged.computeIfAbsent(entry.getKey(), _ -> new HashSet<>()).addAll(entry.getValue());
+                }
             }
         });
 

@@ -7,7 +7,6 @@ import me.exeos.asmplus.remapper.mapper.MappingContext;
 import me.exeos.asmplus.utils.MapperUtil;
 import me.exeos.asmplus.utils.MethodUtil;
 import org.objectweb.asm.tree.ClassNode;
-import org.objectweb.asm.tree.FieldNode;
 import org.objectweb.asm.tree.MethodNode;
 
 import java.util.*;
@@ -24,7 +23,7 @@ public class MethodMapper {
     public static Map<String, String> map(JarArchive jar, Map<String, ClassEdge> hierarchy, Function<Integer, String> nameGen, Function<MappingContext, Boolean> shouldExclude) {
         Map<String, String> mapping = new HashMap<>();
 
-        Map<ClassEdge, Set<String>> usedNamesByClass = new HashMap<>();
+        Map<ClassEdge, Map<String, Set<String>>> usedNamesByClass = new HashMap<>();
 
         for (ClassNode classNode : jar.getClasses().values()) {
             if (!hierarchy.containsKey(classNode.name) || !hierarchy.get(classNode.name).unresolvedParents.isEmpty() || shouldExclude.apply(new MappingContext(classNode, Optional.empty(), Optional.empty()))) {
@@ -49,10 +48,10 @@ public class MethodMapper {
                 continue;
             }
 
-            Set<String> usedNames = MapperUtil.mergeUsedFromHierarchy(hierarchy.get(classNode.name), usedNamesByClass);
+            Map<String, Set<String>> usedNames = MapperUtil.mergeUsedFromHierarchy(hierarchy.get(classNode.name), usedNamesByClass);
             for (MethodNode methodNode : classNode.methods) {
                 if (shouldExclude.apply(new MappingContext(classNode, Optional.empty(), Optional.of(methodNode)))) {
-                    usedNames.add(methodNode.name);
+                    usedNames.computeIfAbsent(methodNode.desc, _ -> new HashSet<>()).add(methodNode.name);
                 }
             }
 
@@ -61,9 +60,9 @@ public class MethodMapper {
                     continue;
                 }
 
-                String name = MapperUtil.genName(nameGen, usedNames);
-                usedNames.add(name);
-                usedNamesByClass.computeIfAbsent(hierarchy.get(classNode.name), _ -> new HashSet<>()).add(name);
+                String name = MapperUtil.genName(nameGen, usedNames.computeIfAbsent(methodNode.desc, _ -> new HashSet<>()));
+                usedNames.computeIfAbsent(methodNode.desc, _ -> new HashSet<>()).add(name);
+                usedNamesByClass.computeIfAbsent(hierarchy.get(classNode.name), _ -> new HashMap<>()).computeIfAbsent(methodNode.desc, _ -> new HashSet<>()).add(name);
 
                 mapping.put(classNode.name + methodNode.name + methodNode.desc, name);
             }
