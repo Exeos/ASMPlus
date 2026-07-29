@@ -15,7 +15,7 @@ public class ClassUtil implements Opcodes {
 
     public static String getNoneCollidingClassName(JarArchive archive, Function<Integer, String> nameGeneration) {
         String name;
-        int tryCount = 1;
+        int tryCount = 0;
         do {
             name = nameGeneration.apply(tryCount);
             tryCount++;
@@ -51,6 +51,7 @@ public class ClassUtil implements Opcodes {
 
     /**
      * Returns a map, mapping the methods name and how often a method with that name is declared. Ignores descriptor and hierarchy methods.
+     *
      * @param owner Class containing methods
      * @return A map, mapping the methods name and how often a method with that name is declared
      */

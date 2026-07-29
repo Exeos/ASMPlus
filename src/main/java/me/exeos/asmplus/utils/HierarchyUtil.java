@@ -17,7 +17,7 @@ public class HierarchyUtil {
 
     public static String genNoneCollidingFieldName(ClassEdge owner, String fieldDesc, Function<Integer, String> nameGen, boolean descAware) {
         String name;
-        int tryCount = 1;
+        int tryCount = 0;
         do {
             name = nameGen.apply(tryCount);
             tryCount++;
@@ -32,7 +32,7 @@ public class HierarchyUtil {
 
     public static String genNoneCollidingMethodName(ClassEdge owner, String methodDesc, Set<String> excludedNames, Function<Integer, String> nameGen) {
         String name;
-        int tryCount = 1;
+        int tryCount = 0;
         do {
             name = nameGen.apply(tryCount);
             tryCount++;
