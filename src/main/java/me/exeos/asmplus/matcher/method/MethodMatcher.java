@@ -1,5 +1,8 @@
 package me.exeos.asmplus.matcher.method;
 
+import org.objectweb.asm.tree.ClassNode;
+import org.objectweb.asm.tree.MethodNode;
+
 import java.util.HashSet;
 import java.util.Set;
 
@@ -20,6 +23,12 @@ public class MethodMatcher {
 
     public void add(MethodMatchEntry mw) {
         entries.add(mw);
+    }
+
+    public void add(ClassNode classNode) {
+        for (MethodNode methodNode : classNode.methods) {
+            entries.add(MethodMatchEntry.of(classNode.name, methodNode.name, methodNode.desc));
+        }
     }
 
     public Set<MethodMatchEntry> get() {

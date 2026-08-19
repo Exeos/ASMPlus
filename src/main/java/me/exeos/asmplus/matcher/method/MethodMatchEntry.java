@@ -1,6 +1,7 @@
 package me.exeos.asmplus.matcher.method;
 
 import me.exeos.asmplus.analysis.hierarchy.edge.MethodEdge;
+import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodInsnNode;
 import org.objectweb.asm.tree.MethodNode;
 

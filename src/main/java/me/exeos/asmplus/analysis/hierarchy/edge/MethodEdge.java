@@ -93,13 +93,13 @@ public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
 
             // upward
             if (owner.superClass != null) {
-                owner.superClass.findNearestMethod(methodNode.name, methodNode.desc)
+                owner.superClass.findNearestMethod(methodNode)
                         .filter(MethodEdge::canBeOverridden)
                         .ifPresent(worklist::add);
             }
 
             for (ClassEdge interfaceEdge : owner.interfaces) {
-                interfaceEdge.findNearestMethod(methodNode.name, methodNode.desc)
+                interfaceEdge.findNearestMethod(methodNode)
                         .filter(MethodEdge::canBeOverridden)
                         .ifPresent(worklist::add);
             }
