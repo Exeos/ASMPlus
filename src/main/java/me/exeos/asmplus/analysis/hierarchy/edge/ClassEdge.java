@@ -263,6 +263,34 @@ public class ClassEdge {
         return methods;
     }
 
+    public Set<MethodEdge> findMethods(String name, String desc) {
+        Set<MethodEdge> methods = new HashSet<>();
+        getMethod(name, desc).ifPresent(methods::add);
+        for (ClassEdge parent : parents) {
+            methods.addAll(parent.findMethods(name, desc));
+        }
+
+        return methods;
+    }
+
+    public Set<MethodEdge> findMethodsDownward(String name, String desc) {
+        Set<MethodEdge> methods = new HashSet<>();
+        getMethod(name, desc).ifPresent(methods::add);
+        for (ClassEdge child : children) {
+            methods.addAll(child.findMethodsDownward(name, desc));
+        }
+
+        return methods;
+    }
+
+    public Set<MethodEdge> findAllMethods(String name, String desc) {
+        Set<MethodEdge> methods = new HashSet<>();
+        methods.addAll(findMethods(name, desc));
+        methods.addAll(findMethodsDownward(name, desc));
+
+        return methods;
+    }
+
     /**
      * Finds the nearest method with the same name and descriptor as the given method node.
      *

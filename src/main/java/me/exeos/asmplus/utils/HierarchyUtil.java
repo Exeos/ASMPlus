@@ -53,4 +53,12 @@ public class HierarchyUtil {
             }
         }
     }
+
+    public static String findRoot(Map<String, ClassEdge> hierarchy, String owner, String name, String desc) {
+        if (!hierarchy.containsKey(owner)) {
+            return owner;
+        }
+
+        return hierarchy.get(owner).findTopDeclarations(name, desc).iterator().next().owner().classNode.name;
+    }
 }

@@ -5,6 +5,7 @@ import me.exeos.asmplus.analysis.hierarchy.edge.ClassEdge;
 import me.exeos.asmplus.descriptor.DescriptorMember;
 import me.exeos.asmplus.descriptor.DescriptorParser;
 import me.exeos.asmplus.jar.JarArchive;
+import me.exeos.asmplus.utils.HierarchyUtil;
 import org.objectweb.asm.Handle;
 import org.objectweb.asm.Type;
 import org.objectweb.asm.tree.*;
@@ -34,7 +35,7 @@ public class MethodRemapper {
                 switch (insnNode) {
                     case MethodInsnNode methodInsnNode -> {
                         methodInsnNode.name = getMapped(
-                                findRoot(hierarchy, methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc),
+                                HierarchyUtil.findRoot(hierarchy, methodInsnNode.owner, methodInsnNode.name, methodInsnNode.desc),
                                 methodInsnNode.name,
                                 methodInsnNode.desc);
                     }
@@ -63,15 +64,6 @@ public class MethodRemapper {
         for (MethodNode methodNode : owner.methods) {
             methodNode.name = getMapped(owner.name, methodNode);
         }
-    }
-
-    private String findRoot(Map<String, ClassEdge> hierarchy, String owner, String name, String desc) {
-        if (!hierarchy.containsKey(owner)) {
-            return owner;
-        }
-
-        // should prolly not matter because method mapper merges override group names
-        return hierarchy.get(owner).findTopDeclarations(name, desc).iterator().next().owner().classNode.name;
     }
 
     private Handle remapHandle(Handle handle) {
