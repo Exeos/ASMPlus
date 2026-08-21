@@ -2,7 +2,9 @@ package me.exeos.asmplus.descriptor.descriptors.method;
 
 import me.exeos.asmplus.descriptor.DescriptorMember;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 public class MethodDescriptor {
 
@@ -52,6 +54,22 @@ public class MethodDescriptor {
         }
 
         return slot;
+    }
+
+    public Map<Integer, Integer> mapLocalToParamIndex() {
+        return mapLocalToParamIndex(0);
+    }
+
+    public Map<Integer, Integer> mapLocalToParamIndex(int offset) {
+        Map<Integer, Integer> indexByLocal = new HashMap<>();
+
+        int local = offset;
+        for (int i = 0; i < params.size(); i++) {
+            indexByLocal.put(local, i);
+            local += params.get(i).getSlotWidth();
+        }
+
+        return indexByLocal;
     }
 
     public MethodDescriptor erase() {

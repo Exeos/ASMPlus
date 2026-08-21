@@ -13,7 +13,24 @@ import java.util.*;
  * A {@code MethodEdge} wraps a method declared on a specific {@link ClassEdge} and provides helpers
  * </p>
  */
-public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
+public class MethodEdge {
+
+    private final ClassEdge owner;
+    private final MethodNode methodNode;
+    private Set<MethodEdge> overrideGroupCache = null;
+    private List<MethodEdge> overridersCache = null;
+    private Set<MethodEdge> topDeclarationsCache = null;
+
+    public MethodEdge(ClassEdge owner, MethodNode methodNode) {
+        this.owner = owner;
+        this.methodNode = methodNode;
+    }
+
+    public void invalidateCache() {
+        overrideGroupCache = null;
+        overridersCache = null;
+        topDeclarationsCache = null;
+    }
 
     /**
      * Returns all methods in descendant classes that override this method.
@@ -21,6 +38,10 @@ public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
      * @return A list of overriding method edges
      */
     public List<MethodEdge> getOverriders() {
+        if (overridersCache != null) {
+            return overridersCache;
+        }
+
         List<MethodEdge> found = new ArrayList<>();
 
         if (MethodUtil.hasAccess(methodNode, Opcodes.ACC_FINAL)
@@ -35,6 +56,7 @@ public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
                 .filter(methodEdge -> !MethodUtil.hasAccess(methodEdge.methodNode, Opcodes.ACC_STATIC))
                 .ifPresent(found::add));
 
+        overridersCache = found;
         return found;
     }
 
@@ -44,6 +66,10 @@ public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
      * @return A Set of declaring methods of this method, at a minimum: this method
      */
     public Set<MethodEdge> findTopDeclarations() {
+        if (topDeclarationsCache != null) {
+            return topDeclarationsCache;
+        }
+
         Set<MethodEdge> topDeclarations = new HashSet<>();
         for (MethodEdge methodEdge : getOverrideGroup()) {
             boolean isTop = true;
@@ -67,6 +93,7 @@ public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
             }
         }
 
+        topDeclarationsCache = topDeclarations;
         return topDeclarations;
     }
 
@@ -78,6 +105,10 @@ public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
      * @return the set of all method edges linked to this one. Always contains at least {@code this} method
      */
     public Set<MethodEdge> getOverrideGroup() {
+        if (overrideGroupCache != null) {
+            return overrideGroupCache;
+        }
+
         Set<MethodEdge> group = new HashSet<>();
         Deque<MethodEdge> worklist = new ArrayDeque<>();
         worklist.add(this);
@@ -110,6 +141,7 @@ public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
             collectInterfaceDeclarations(owner, methodNode, worklist);
         }
 
+        overrideGroupCache = group;
         return group;
     }
 
@@ -170,6 +202,14 @@ public record MethodEdge(ClassEdge owner, MethodNode methodNode) {
         }
 
         return other.getOverriders().contains(this);
+    }
+
+    public ClassEdge owner() {
+        return owner;
+    }
+
+    public MethodNode methodNode() {
+        return methodNode;
     }
 
     public String getOwnerName() {
