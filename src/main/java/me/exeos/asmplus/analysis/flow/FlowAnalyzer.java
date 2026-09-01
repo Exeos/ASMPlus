@@ -26,7 +26,7 @@ public class FlowAnalyzer {
     /**
      * Map method instructions to List of BasicBlock.
      *
-     * @param methodNode The method to be analyzed
+     * @param methodNode   The method to be analyzed
      * @param detachBlocks Should block instructions be detached from the methodNode's InsnList
      * @return List of BasicBlock
      */
@@ -37,8 +37,8 @@ public class FlowAnalyzer {
     /**
      * Map method instructions to List of BasicBlock.
      *
-     * @param methodNode The method to be analyzed
-     * @param detachBlocks Should block instructions be detached from the methodNode's InsnList
+     * @param methodNode               The method to be analyzed
+     * @param detachBlocks             Should block instructions be detached from the methodNode's InsnList
      * @param ignoreUnmappedExceptions Indicates if unmapped exception handlers should be treated as an error
      * @return List of BasicBlock
      */
@@ -223,9 +223,9 @@ public class FlowAnalyzer {
     /**
      * Links Blocks to one another
      *
-     * @param methodNode Method node being analyzed, required for exception flow linking
-     * @param blocks     List of blocks to be linked
-     * @param blockMap   Map, mapping instructions where blocks start to Block
+     * @param methodNode               Method node being analyzed, required for exception flow linking
+     * @param blocks                   List of blocks to be linked
+     * @param blockMap                 Map, mapping instructions where blocks start to Block
      * @param ignoreUnmappedExceptions Indicates if unmapped exception handlers should be treated as an error
      */
     private static void linkBlocks(MethodNode methodNode, List<BasicBlock> blocks, Map<AbstractInsnNode, BasicBlock> blockMap, boolean ignoreUnmappedExceptions) {

@@ -6,8 +6,10 @@ import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.InsnNode;
 import org.objectweb.asm.tree.MethodNode;
 
+import java.util.HashSet;
 import java.util.Map;
 import java.util.Optional;
+import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -33,6 +35,17 @@ public class ClassUtil implements Opcodes {
         methodNode.instructions.add(new InsnNode(RETURN));
         classNode.methods.add(methodNode);
         return methodNode;
+    }
+
+    public static Set<MethodNode> getConstructors(ClassNode classNode) {
+        Set<MethodNode> constructors = new HashSet<>();
+        for (MethodNode method : classNode.methods) {
+            if (method.name.equals("<init>")) {
+                constructors.add(method);
+            }
+        }
+
+        return constructors;
     }
 
     public static Optional<MethodNode> findMethod(ClassNode owner, String methodName, String methodDesc) {

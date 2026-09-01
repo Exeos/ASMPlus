@@ -21,6 +21,30 @@ public class JarArchive {
         this.manifest = manifest;
     }
 
+    public void merge(JarArchive other, MergeMode mode) {
+        other.classes.forEach((s, classNode) -> {
+            boolean conflict = classes.containsKey(s) || resources.containsKey(s);
+
+            if (conflict && mode == MergeMode.ERROR) {
+                throw new RuntimeException("Failed to merge jar archives. Conflicting file: " + s);
+            } else if (!conflict || mode == MergeMode.OVERRIDE) {
+                classes.put(s, classNode);
+                resources.remove(s);
+            }
+        });
+
+        other.resources.forEach((s, resource) -> {
+            boolean conflict = classes.containsKey(s) || resources.containsKey(s);
+
+            if (conflict && mode == MergeMode.ERROR) {
+                throw new RuntimeException("Failed to merge jar archives. Conflicting file: " + s);
+            } else if (!conflict || mode == MergeMode.OVERRIDE) {
+                resources.put(s, resource);
+                classes.remove(s);
+            }
+        });
+    }
+
     public boolean isDependency(String name) {
         return !classes.containsKey(name) && dependencies.containsKey(name);
     }
@@ -46,15 +70,15 @@ public class JarArchive {
         return classes;
     }
 
+    public void setClasses(Map<String, ClassNode> classes) {
+        this.classes = classes;
+    }
+
     public Map<String, ClassNode> getClassesAndDependencies() {
         Map<String, ClassNode> combined = new HashMap<>(getClasses());
         getDependencies().forEach(combined::putIfAbsent);
 
         return combined;
-    }
-
-    public void setClasses(Map<String, ClassNode> classes) {
-        this.classes = classes;
     }
 
     public Map<String, ClassNode> getDependencies() {
@@ -67,5 +91,11 @@ public class JarArchive {
 
     public Manifest getManifest() {
         return manifest;
+    }
+
+    public enum MergeMode {
+        OVERRIDE,
+        SKIP,
+        ERROR
     }
 }

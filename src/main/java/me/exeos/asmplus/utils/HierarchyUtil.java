@@ -55,10 +55,16 @@ public class HierarchyUtil {
     }
 
     public static String findRoot(Map<String, ClassEdge> hierarchy, String owner, String name, String desc) {
-        if (!hierarchy.containsKey(owner)) {
+        ClassEdge ownerEdge = hierarchy.get(owner);
+        if (ownerEdge == null) {
             return owner;
         }
 
-        return hierarchy.get(owner).findTopDeclarations(name, desc).iterator().next().owner().classNode.name;
+        var tops = ownerEdge.findTopDeclarations(name, desc);
+        if (tops == null || tops.isEmpty()) {
+            return owner;
+        }
+
+        return tops.iterator().next().owner().classNode.name;
     }
 }

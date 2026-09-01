@@ -4,6 +4,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.*;
 
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.function.Consumer;
 
 public class InsnUtil implements Opcodes {
@@ -180,6 +181,18 @@ public class InsnUtil implements Opcodes {
             AbstractInsnNode next = current.getNext();
             visitor.accept(current);
             current = next;
+        }
+    }
+
+    public static void loopIndexed(InsnList insnList, BiConsumer<AbstractInsnNode, Integer> visitor) {
+        AbstractInsnNode current = insnList.getFirst();
+        int index = 0;
+
+        while (current != null) {
+            AbstractInsnNode next = current.getNext();
+            visitor.accept(current, index);
+            current = next;
+            index++;
         }
     }
 

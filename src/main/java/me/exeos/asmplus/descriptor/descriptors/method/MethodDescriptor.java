@@ -56,6 +56,22 @@ public class MethodDescriptor {
         return slot;
     }
 
+    public Map<Integer, Integer> mapParamIndexToLocal() {
+        return mapParamIndexToLocal(0);
+    }
+
+    public Map<Integer, Integer> mapParamIndexToLocal(int offset) {
+        Map<Integer, Integer> localByIndex = new HashMap<>();
+
+        int local = offset;
+        for (int i = 0; i < params.size(); i++) {
+            localByIndex.put(i, local);
+            local += params.get(i).getSlotWidth();
+        }
+
+        return localByIndex;
+    }
+
     public Map<Integer, Integer> mapLocalToParamIndex() {
         return mapLocalToParamIndex(0);
     }
